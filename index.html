@@ -28,8 +28,8 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- ZXing para lectura de códigos de barras -->
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <!-- ZXing para lectura de códigos de barras (Versión estable compatible con iOS Safari) -->
+    <script src="https://unpkg.com/@zxing/library@0.19.1"></script>
 
     <!-- jsPDF & AutoTable para exportación a PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -273,6 +273,7 @@
         let currentStream = null;
         let targetScanMode = null;
         let editingIndex = null;
+        let isScanningActive = false;
         const STORAGE_KEY = 'auditoria_cartones_ios_data_v1';
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -318,6 +319,9 @@
         }
 
         async function iniciarEscaneo(modo) {
+            if (isScanningActive) return;
+            isScanningActive = true;
+
             targetScanMode = modo;
             document.getElementById('cameraModalTitle').textContent = modo === 'carton' ? 'Escaneando Cartón' : 'Escaneando Producto';
             document.getElementById('cameraModal').classList.remove('hidden');
@@ -340,40 +344,78 @@
 
                 const videoElem = document.getElementById('videoPreview');
                 videoElem.srcObject = currentStream;
-                await videoElem.play();
+                videoElem.setAttribute('autoplay', '');
+                videoElem.setAttribute('muted', '');
+                videoElem.setAttribute('playsinline', '');
+                videoElem.setAttribute('webkit-playsinline', '');
 
-                videoElem.onloadedmetadata = () => {
-                    codeReader.decodeFromVideoElement(videoElem, (result, err) => {
-                        if (result) {
-                            if (window.navigator && window.navigator.vibrate) {
-                                window.navigator.vibrate(100);
+                const iniciarDecodificacion = () => {
+                    videoElem.play().then(() => {
+                        codeReader.decodeFromVideoElement(videoElem, (result, err) => {
+                            if (result && isScanningActive) {
+                                isScanningActive = false;
+                                if (window.navigator && window.navigator.vibrate) {
+                                    window.navigator.vibrate(100);
+                                }
+                                const codigo = result.getText();
+                                cerrarCamara();
+                                procesarEscaneoCodigo(codigo);
                             }
-                            const codigo = result.getText();
-                            cerrarCamara();
-                            procesarEscaneoCodigo(codigo);
-                        }
+                        });
+                    }).catch(playErr => {
+                        console.error("Error al reproducir video en iOS:", playErr);
+                        isScanningActive = false;
+                        cerrarCamara();
                     });
                 };
 
+                if (videoElem.readyState >= 1 || videoElem.videoWidth > 0) {
+                    iniciarDecodificacion();
+                } else {
+                    videoElem.onloadedmetadata = () => {
+                        iniciarDecodificacion();
+                    };
+                }
+
             } catch (err) {
                 console.error("Error al acceder a la cámara:", err);
+                isScanningActive = false;
                 cerrarCamara();
                 alert("No se pudo acceder a la cámara trasera. Asegúrate de abrir este sitio mediante un enlace seguro (HTTPS) y dar permisos en Safari.");
             }
         }
 
         function cerrarCamara() {
+            isScanningActive = false;
+            
             if (codeReader) {
-                try { codeReader.reset(); } catch (e) {}
+                try { 
+                    codeReader.reset(); 
+                } catch (e) {}
             }
+
             if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
+                try {
+                    currentStream.getTracks().forEach(track => track.stop());
+                } catch (e) {}
                 currentStream = null;
             }
-            const videoElem = document.getElementById('videoPreview');
-            if (videoElem) videoElem.srcObject = null;
 
-            document.getElementById('cameraModal').classList.add('hidden');
+            const videoElem = document.getElementById('videoPreview');
+            if (videoElem) {
+                try {
+                    videoElem.pause();
+                } catch (e) {}
+                videoElem.srcObject = null;
+                videoElem.onloadedmetadata = null;
+                videoElem.load();
+            }
+
+            const modal = document.getElementById('cameraModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            
             document.body.classList.remove('modal-active');
         }
 
