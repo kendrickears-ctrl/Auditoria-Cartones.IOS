@@ -28,7 +28,7 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- ZXing para lectura de códigos de barras (Versión estable compatible con iOS Safari) -->
+    <!-- ZXing para lectura de códigos de barras -->
     <script src="https://unpkg.com/@zxing/library@0.19.1"></script>
 
     <!-- jsPDF & AutoTable para exportación a PDF -->
@@ -232,6 +232,8 @@
 
         <div class="relative flex-1 flex items-center justify-center overflow-hidden bg-black">
             <video id="videoPreview" autoplay playsinline webkit-playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
+            <!-- Canvas oculto para procesamiento de fotogramas optimizado para iOS Safari -->
+            <canvas id="canvasPreview" class="hidden"></canvas>
             <div class="relative w-64 h-40 border-2 border-emerald-400 rounded-lg z-10 flex items-center justify-center scanner-target">
                 <div class="w-full h-0.5 bg-red-500 shadow-md animate-pulse"></div>
             </div>
@@ -274,6 +276,7 @@
         let targetScanMode = null;
         let editingIndex = null;
         let isScanningActive = false;
+        let scanInterval = null;
         const STORAGE_KEY = 'auditoria_cartones_ios_data_v1';
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -332,6 +335,7 @@
                     codeReader = new ZXing.BrowserMultiFormatReader();
                 }
 
+                // Solicitar cámara trasera con resolución estable para iOS
                 try {
                     currentStream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: { exact: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
@@ -343,25 +347,47 @@
                 }
 
                 const videoElem = document.getElementById('videoPreview');
+                const canvasElem = document.getElementById('canvasPreview');
+                const canvasCtx = canvasElem.getContext('2d', { willReadFrequently: true });
+
                 videoElem.srcObject = currentStream;
                 videoElem.setAttribute('autoplay', '');
                 videoElem.setAttribute('muted', '');
                 videoElem.setAttribute('playsinline', '');
                 videoElem.setAttribute('webkit-playsinline', '');
 
-                const iniciarDecodificacion = () => {
+                const iniciarCapturaFotogramas = () => {
                     videoElem.play().then(() => {
-                        codeReader.decodeFromVideoElement(videoElem, (result, err) => {
-                            if (result && isScanningActive) {
-                                isScanningActive = false;
-                                if (window.navigator && window.navigator.vibrate) {
-                                    window.navigator.vibrate(100);
+                        // Bucle de muestreo por canvas optimizado para Safari iOS
+                        scanInterval = setInterval(() => {
+                            if (!isScanningActive) return;
+                            if (videoElem.readyState === videoElem.HAVE_ENOUGH_DATA) {
+                                canvasElem.width = videoElem.videoWidth;
+                                canvasElem.height = videoElem.videoHeight;
+                                if (canvasElem.width > 0 && canvasElem.height > 0) {
+                                    canvasCtx.drawImage(videoElem, 0, 0, canvasElem.width, canvasElem.height);
+                                    
+                                    try {
+                                        // Intentar decodificar directamente desde el canvas procesado
+                                        const luminanceSource = new ZXing.HTMLCanvasElementLuminanceSource(canvasElem);
+                                        const binaryBitmap = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminanceSource));
+                                        const result = codeReader.decode(binaryBitmap);
+
+                                        if (result && isScanningActive) {
+                                            isScanningActive = false;
+                                            if (window.navigator && window.navigator.vibrate) {
+                                                window.navigator.vibrate(100);
+                                            }
+                                            const codigo = result.getText();
+                                            cerrarCamara();
+                                            procesarEscaneoCodigo(codigo);
+                                        }
+                                    } catch (decodeErr) {
+                                        // Ignorar errores por fotograma sin código detectado
+                                    }
                                 }
-                                const codigo = result.getText();
-                                cerrarCamara();
-                                procesarEscaneoCodigo(codigo);
                             }
-                        });
+                        }, 150); // Consulta cada 150ms para un rendimiento fluido sin congelar el iPhone
                     }).catch(playErr => {
                         console.error("Error al reproducir video en iOS:", playErr);
                         isScanningActive = false;
@@ -370,10 +396,10 @@
                 };
 
                 if (videoElem.readyState >= 1 || videoElem.videoWidth > 0) {
-                    iniciarDecodificacion();
+                    iniciarCapturaFotogramas();
                 } else {
                     videoElem.onloadedmetadata = () => {
-                        iniciarDecodificacion();
+                        iniciarCapturaFotogramas();
                     };
                 }
 
@@ -387,6 +413,11 @@
 
         function cerrarCamara() {
             isScanningActive = false;
+
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
             
             if (codeReader) {
                 try { 
