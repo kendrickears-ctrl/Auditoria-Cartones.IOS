@@ -45,7 +45,6 @@
         .modal-active {
             overflow: hidden;
         }
-        /* Ajuste visual para el recuadro del escaner */
         .scanner-target {
             box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
         }
@@ -79,7 +78,7 @@
     <!-- MAIN CONTAINER -->
     <main class="max-w-md mx-auto w-full p-4 flex-1">
 
-        <!-- ==================== PESTAÑA 1: CAPTURA ==================== -->
+        <!-- PESTAÑA 1: CAPTURA -->
         <section id="tabCaptura" class="space-y-4">
 
             <!-- Card 1: Datos de Sesión -->
@@ -136,14 +135,12 @@
                     <i data-lucide="zap" class="w-5 h-5"></i> Escanear Producto (Modo Ráfaga)
                 </button>
 
-                <!-- Separador -->
                 <div class="relative flex py-1 items-center">
                     <div class="flex-grow border-t border-gray-200"></div>
                     <span class="flex-shrink mx-3 text-xs text-gray-400 uppercase font-semibold">O Ingreso Manual</span>
                     <div class="flex-grow border-t border-gray-200"></div>
                 </div>
 
-                <!-- Captura SKU Manual + Cajas -->
                 <div class="grid grid-cols-3 gap-2">
                     <div class="col-span-2">
                         <label class="block text-xs font-semibold text-gray-500 mb-1">SKU / EAN</label>
@@ -155,7 +152,6 @@
                     </div>
                 </div>
 
-                <!-- Toggle Discrepancias -->
                 <div class="border-t pt-3 space-y-3">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-gray-700 uppercase">¿Registrar Discrepancia?</span>
@@ -165,7 +161,6 @@
                         </label>
                     </div>
 
-                    <!-- Panel Discrepancias (oculto por defecto) -->
                     <div id="panelDiscrepancia" class="hidden bg-amber-50 rounded-lg p-3 border border-amber-200 space-y-3">
                         <div class="grid grid-cols-2 gap-2">
                             <div>
@@ -198,17 +193,14 @@
                     </div>
                 </div>
 
-                <!-- Botón Guardar Registro -->
                 <button onclick="guardarRegistro()" class="w-full bg-meli-blue hover:bg-opacity-90 active:scale-98 text-white font-bold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 text-base transition-all">
                     <i data-lucide="save" class="w-5 h-5"></i> Guardar Registro
                 </button>
             </div>
         </section>
 
-        <!-- ==================== PESTAÑA 2: CONSULTA Y EXPORTACIÓN ==================== -->
+        <!-- PESTAÑA 2: CONSULTA Y EXPORTACIÓN -->
         <section id="tabConsulta" class="space-y-4 hidden">
-
-            <!-- Botones de Acción de Exportación y Limpieza -->
             <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-200 grid grid-cols-3 gap-2">
                 <button onclick="exportarCSV()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 px-2 rounded-lg text-xs flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform">
                     <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV (Excel)
@@ -221,17 +213,13 @@
                 </button>
             </div>
 
-            <!-- Listado de Registros Capturados -->
-            <div id="listaRegistros" class="space-y-3">
-                <!-- Se llena dinámicamente con JavaScript -->
-            </div>
+            <div id="listaRegistros" class="space-y-3"></div>
         </section>
 
     </main>
 
-    <!-- ==================== MODAL DE CÁMARA (iOS SAFARI FIT) ==================== -->
+    <!-- MODAL DE CÁMARA -->
     <div id="cameraModal" class="fixed inset-0 bg-black z-50 hidden flex flex-col justify-between">
-        <!-- Header Modal cámara -->
         <div class="p-4 flex justify-between items-center text-white z-10 bg-gradient-to-b from-black/80 to-transparent">
             <div>
                 <h3 id="cameraModalTitle" class="font-bold text-base">Escaneando...</h3>
@@ -242,23 +230,19 @@
             </button>
         </div>
 
-        <!-- Viewport del Video -->
         <div class="relative flex-1 flex items-center justify-center overflow-hidden bg-black">
             <video id="videoPreview" autoplay playsinline webkit-playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
-            
-            <!-- Recuadro Guía de Escaneo -->
             <div class="relative w-64 h-40 border-2 border-emerald-400 rounded-lg z-10 flex items-center justify-center scanner-target">
                 <div class="w-full h-0.5 bg-red-500 shadow-md animate-pulse"></div>
             </div>
         </div>
 
-        <!-- Footer Modal cámara -->
         <div class="p-4 text-center text-xs text-gray-300 bg-gradient-to-t from-black/80 to-transparent z-10">
             Asegúrate de tener buena iluminación en la zona de trabajo
         </div>
     </div>
 
-    <!-- ==================== MODAL CAPTURA DE CANTIDAD (Modo Ráfaga iOS) ==================== -->
+    <!-- MODAL CAPTURA DE CANTIDAD -->
     <div id="cantidadModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-xs rounded-2xl p-5 shadow-2xl space-y-4">
             <div class="text-center">
@@ -282,30 +266,23 @@
         </div>
     </div>
 
-    <!-- ==================== JAVASCRIPT LÓGICA DE APLICACIÓN ==================== -->
+    <!-- SCRIPT -->
     <script>
-        // --- ESTADO GLOBAL ---
         let registros = [];
         let codeReader = null;
         let currentStream = null;
-        let targetScanMode = null; // 'carton' | 'rafaga'
+        let targetScanMode = null;
         let editingIndex = null;
-
-        // Clave de almacenamiento local persistente
         const STORAGE_KEY = 'auditoria_cartones_ios_data_v1';
 
-        // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             cargarRegistros();
-            
-            // Sincronizar campo empleado con header
             document.getElementById('numEmpleado').addEventListener('input', (e) => {
                 document.getElementById('headerEmpleado').textContent = e.target.value ? `Emp: ${e.target.value}` : 'No Empleado';
             });
         });
 
-        // Switcher de Pestañas
         function switchTab(tab) {
             const tabCaptura = document.getElementById('tabCaptura');
             const tabConsulta = document.getElementById('tabConsulta');
@@ -333,15 +310,12 @@
                 panel.classList.remove('hidden');
             } else {
                 panel.classList.add('hidden');
-                // Reset valores discrepancia
                 document.getElementById('cajasDisc').value = 0;
                 document.getElementById('sobrantePz').value = 0;
                 document.getElementById('faltantePz').value = 0;
                 document.getElementById('mermaPz').value = 0;
             }
         }
-
-        // ==================== CAMARA & ZXING PARA SAFARI iOS ====================
 
         async function iniciarEscaneo(modo) {
             targetScanMode = modo;
@@ -354,55 +328,50 @@
                     codeReader = new ZXing.BrowserMultiFormatReader();
                 }
 
-                // Configuración de constraints estricta para Safari iOS
-                const constraints = {
-                    video: {
-                        facingMode: { ideal: "environment" },
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
-                };
+                try {
+                    currentStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { exact: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
+                } catch (e) {
+                    currentStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
+                }
 
-                // Solicitud explícita de Stream para validar permisos de Safari
-                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
                 const videoElem = document.getElementById('videoPreview');
                 videoElem.srcObject = currentStream;
-
-                // Asegurar reproducibilidad en iOS Safari
                 await videoElem.play();
 
-                // Inicializar lectura continua
-                codeReader.decodeFromVideoElement(videoElem, (result, err) => {
-                    if (result) {
-                        // Feedback Háptico en iOS si disponible
-                        if (navigator.vibrate) navigator.vibrate(100);
-                        
-                        const codigo = result.getText();
-                        cerrarCamara();
-                        procesarEscaneoCodigo(codigo);
-                    }
-                });
+                videoElem.onloadedmetadata = () => {
+                    codeReader.decodeFromVideoElement(videoElem, (result, err) => {
+                        if (result) {
+                            if (window.navigator && window.navigator.vibrate) {
+                                window.navigator.vibrate(100);
+                            }
+                            const codigo = result.getText();
+                            cerrarCamara();
+                            procesarEscaneoCodigo(codigo);
+                        }
+                    });
+                };
 
             } catch (err) {
-                console.error("Error al acceder a la cámara en Safari:", err);
+                console.error("Error al acceder a la cámara:", err);
                 cerrarCamara();
-                alert("No se pudo acceder a la cámara. En Safari para iPhone, asegúrate de haber concedido los permisos de Cámara en la Configuración de iOS o en el icono 'aA' de la barra de direcciones.");
+                alert("No se pudo acceder a la cámara trasera. Asegúrate de abrir este sitio mediante un enlace seguro (HTTPS) y dar permisos en Safari.");
             }
         }
 
         function cerrarCamara() {
             if (codeReader) {
-                codeReader.reset();
+                try { codeReader.reset(); } catch (e) {}
             }
-
-            // Liberar tracks de la cámara explícitamente (Crítico para iOS Safari)
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
                 currentStream = null;
             }
-
             const videoElem = document.getElementById('videoPreview');
-            videoElem.srcObject = null;
+            if (videoElem) videoElem.srcObject = null;
 
             document.getElementById('cameraModal').classList.add('hidden');
             document.body.classList.remove('modal-active');
@@ -412,11 +381,9 @@
             if (targetScanMode === 'carton') {
                 document.getElementById('cartonCode').value = codigo;
             } else if (targetScanMode === 'rafaga') {
-                // Comportamiento de Ráfaga iOS: Detiene cámara y pide la cantidad
                 document.getElementById('modalSkuDetected').textContent = codigo;
                 document.getElementById('modalCajasCount').value = 1;
                 document.getElementById('cantidadModal').classList.remove('hidden');
-                // Auto-enfocar input de cantidad
                 setTimeout(() => document.getElementById('modalCajasCount').focus(), 200);
             }
         }
@@ -432,12 +399,7 @@
             document.getElementById('skuInput').value = sku;
             document.getElementById('cajasInput').value = cajas;
             document.getElementById('cantidadModal').classList.add('hidden');
-
-            // Feedback visual
-            alert(`SKU ${sku} cargado con ${cajas} cajas. Haz clic en "Guardar Registro" para completar el envío.`);
         }
-
-        // ==================== GUARDAR Y GESTIONAR REGISTROS ====================
 
         function guardarRegistro() {
             const numEmpleado = document.getElementById('numEmpleado').value.trim();
@@ -502,22 +464,13 @@
         function cargarRegistros() {
             try {
                 const data = localStorage.getItem(STORAGE_KEY);
-                if (data) {
-                    registros = JSON.parse(data);
-                }
-            } catch (e) {
-                console.error("Error cargando de localStorage:", e);
-                registros = [];
-            }
+                if (data) registros = JSON.parse(data);
+            } catch (e) { registros = []; }
             actualizarBadge();
         }
 
         function guardarEnLocalStorage() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
-            } catch (e) {
-                console.error("Error guardando en localStorage:", e);
-            }
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch (e) {}
         }
 
         function actualizarBadge() {
@@ -548,12 +501,8 @@
                         <div class="text-right">
                             <span class="text-[10px] text-gray-400 font-semibold">${reg.fecha} ${reg.hora}</span>
                             <div class="flex justify-end gap-1 mt-1">
-                                <button onclick="editarRegistro(${idx})" class="p-1 text-blue-600 hover:bg-blue-50 rounded">
-                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
-                                </button>
-                                <button onclick="eliminarRegistro(${idx})" class="p-1 text-red-600 hover:bg-red-50 rounded">
-                                    <i data-lucide="trash" class="w-4 h-4"></i>
-                                </button>
+                                <button onclick="editarRegistro(${idx})" class="p-1 text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="eliminarRegistro(${idx})" class="p-1 text-red-600 hover:bg-red-50 rounded"><i data-lucide="trash" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                     </div>
@@ -572,7 +521,6 @@
                     ` : ''}
                 </div>
             `).join('');
-
             lucide.createIcons();
         }
 
@@ -588,7 +536,6 @@
         function editarRegistro(idx) {
             const reg = registros[idx];
             editingIndex = idx;
-
             document.getElementById('numEmpleado').value = reg.numEmpleado;
             document.getElementById('psq').value = reg.psq;
             document.getElementById('destino').value = reg.destino;
@@ -608,7 +555,6 @@
                 document.getElementById('toggleDiscrepancia').checked = false;
                 toggleSeccionDiscrepancia();
             }
-
             switchTab('captura');
         }
 
@@ -617,7 +563,7 @@
                 alert("No hay registros para borrar.");
                 return;
             }
-            if (confirm("ATENCIÓN: ¿Estás seguro de que deseas eliminar TODOS los registros del turno? Esta acción no se puede deshacer.")) {
+            if (confirm("ATENCIÓN: ¿Estás seguro de que deseas eliminar TODOS los registros del turno?")) {
                 registros = [];
                 guardarEnLocalStorage();
                 renderizarLista();
@@ -625,50 +571,18 @@
             }
         }
 
-        // ==================== EXPORTACIÓN CSV & PDF (12 COLUMNAS) ====================
-
         function exportarCSV() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar.");
                 return;
             }
-
-            // Las 12 columnas exactas requeridas
-            const headers = [
-                "Destino",
-                "PSQ",
-                "Carton",
-                "Numero de Empleado",
-                "Hora",
-                "Fecha",
-                "SKU",
-                "Cajas Auditadas",
-                "Cajas con Discrepancia",
-                "Sobrante",
-                "Faltante",
-                "Merma"
-            ];
-
+            const headers = ["Destino", "PSQ", "Carton", "Numero de Empleado", "Hora", "Fecha", "SKU", "Cajas Auditadas", "Cajas con Discrepancia", "Sobrante", "Faltante", "Merma"];
             const rows = registros.map(r => [
-                `"${r.destino}"`,
-                `"${r.psq}"`,
-                `"${r.carton}"`,
-                `"${r.numEmpleado}"`,
-                `"${r.hora}"`,
-                `"${r.fecha}"`,
-                `"${r.sku}"`,
-                r.cajasAuditadas,
-                r.cajasConDiscrepancia,
-                r.sobrante,
-                r.faltante,
-                r.merma
+                `"${r.destino}"`, `"${r.psq}"`, `"${r.carton}"`, `"${r.numEmpleado}"`, `"${r.hora}"`, `"${r.fecha}"`, `"${r.sku}"`,
+                r.cajasAuditadas, r.cajasConDiscrepancia, r.sobrante, r.faltante, r.merma
             ]);
-
-            // BOM (\uFEFF) para compatibilidad con Excel en español y acentos UTF-8
             let csvContent = "\uFEFF" + headers.join(";") + "\n";
-            rows.forEach(rowArray => {
-                csvContent += rowArray.join(";") + "\n";
-            });
+            rows.forEach(rowArray => { csvContent += rowArray.join(";") + "\n"; });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -685,36 +599,15 @@
                 alert("No hay datos para exportar a PDF.");
                 return;
             }
-
             const { jsPDF } = window.jspdf;
-            // PDF horizontal para espacio adecuado de 12 columnas
             const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
-
             doc.setFontSize(14);
             doc.text("Reporte de Auditoría de Cartones", 14, 15);
             doc.setFontSize(9);
             doc.text(`Generado el: ${new Date().toLocaleString('es-MX')}`, 14, 21);
 
-            // 12 Columnas exactas
-            const tableHeaders = [[
-                "Destino", "PSQ", "Cartón", "Empleado", "Hora", "Fecha", 
-                "SKU", "Caj. Aud", "Caj. Disc", "Sob", "Falt", "Mer"
-            ]];
-
-            const tableData = registros.map(r => [
-                r.destino,
-                r.psq,
-                r.carton,
-                r.numEmpleado,
-                r.hora,
-                r.fecha,
-                r.sku,
-                r.cajasAuditadas,
-                r.cajasConDiscrepancia,
-                r.sobrante,
-                r.faltante,
-                r.merma
-            ]);
+            const tableHeaders = [["Destino", "PSQ", "Cartón", "Empleado", "Hora", "Fecha", "SKU", "Caj. Aud", "Caj. Disc", "Sob", "Falt", "Mer"]];
+            const tableData = registros.map(r => [r.destino, r.psq, r.carton, r.numEmpleado, r.hora, r.fecha, r.sku, r.cajasAuditadas, r.cajasConDiscrepancia, r.sobrante, r.faltante, r.merma]);
 
             doc.autoTable({
                 head: tableHeaders,
@@ -725,7 +618,6 @@
                 headStyles: { fillColor: [45, 50, 119], textColor: [255, 255, 255], fontStyle: 'bold' },
                 alternateRowStyles: { fillColor: [245, 245, 245] }
             });
-
             doc.save(`Auditoria_Cartones_${new Date().toISOString().slice(0,10)}.pdf`);
         }
     </script>
