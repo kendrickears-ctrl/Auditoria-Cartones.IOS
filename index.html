@@ -207,7 +207,7 @@
         let codeReader = null;
         let currentStream = null;
         let isScanningActive = false;
-        const STORAGE_KEY = 'auditoria_cartones_android_v6';
+        const STORAGE_KEY = 'auditoria_cartones_android_v7';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -526,7 +526,7 @@
             document.body.removeChild(link);
         }
 
-        // --- EXPORTACIÓN PDF (CON ENCABEZADO AGRUPADO EN DATOS DISCREPANCIA) ---
+        // --- EXPORTACIÓN PDF (CON EL NUEVO ORDEN DE COLUMNAS Y ENCABEZADO AGRUPADO) ---
         function exportarPDF() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar a PDF.");
@@ -546,18 +546,18 @@
 
             const tableHeaders = [
                 [
-                    { content: 'LPN / Cartón', rowSpan: 2 }, 
-                    { content: 'Destino', rowSpan: 2 }, 
+                    { content: 'CARTON', rowSpan: 2 }, 
+                    { content: 'DESTINO', rowSpan: 2 }, 
                     { content: 'PSQ', rowSpan: 2 }, 
-                    { content: 'Cajas auditadas', rowSpan: 2 }, 
+                    { content: 'CAJAS AUDITADAS', rowSpan: 2 }, 
+                    { content: 'DISCREPANCIA', rowSpan: 2 },
                     { content: 'DATOS DISCREPANCIA', colSpan: 3, styles: { halign: 'center', fillColor: [45, 50, 119] } }, 
-                    { content: 'Tipo', rowSpan: 2 }, 
-                    { content: 'Hora', rowSpan: 2 }
+                    { content: 'HORA', rowSpan: 2 }
                 ],
                 [
                     'SKU', 
-                    'Cajas', 
-                    'Piezas'
+                    'CAJAS', 
+                    'PIEZAS'
                 ]
             ];
 
@@ -565,7 +565,17 @@
 
             registros.forEach(r => {
                 r.discrepancias.forEach(d => {
-                    tableData.push([r.carton, r.destino, r.psq, r.cajasAuditadas, d.sku, d.cajas, d.piezas, d.tipo, r.hora]);
+                    tableData.push([
+                        r.carton, 
+                        r.destino, 
+                        r.psq, 
+                        r.cajasAuditadas, 
+                        d.tipo, 
+                        d.sku, 
+                        d.cajas, 
+                        d.piezas, 
+                        r.hora
+                    ]);
                 });
             });
 
