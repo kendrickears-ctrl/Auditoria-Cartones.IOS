@@ -28,7 +28,7 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- ZXing para lectura de códigos de barras (Versión estable y robusta para Android) -->
+    <!-- ZXing para lectura de códigos de barras (Versión estable y robusta) -->
     <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 
     <!-- jsPDF & AutoTable para exportación a PDF -->
@@ -81,7 +81,7 @@
         <!-- PESTAÑA 1: CAPTURA -->
         <section id="tabCaptura" class="space-y-4">
 
-            <!-- Card 1: Campos de Captura (Reorganizados según requerimiento) -->
+            <!-- Card 1: Campos de Captura (Orden solicitado) -->
             <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -107,7 +107,7 @@
                     <input type="text" id="supervisor" placeholder="Nombre del supervisor responsable" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
                 </div>
 
-                <!-- Tercera fila: Destino y Pick Sequence (PSQ) -->
+                <!-- Tercera fila: Destino y PSQ -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 mb-1">Destino</label>
@@ -130,7 +130,7 @@
                     </div>
                 </div>
 
-                <!-- Quinta fila: Cajas auditadas (sin valor predeterminado) -->
+                <!-- Quinta fila: Cajas auditadas (vacío por defecto) -->
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas auditadas</label>
                     <input type="number" id="cajasAuditadas" placeholder="Ingrese cantidad" min="0" class="w-full text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-bold text-center">
@@ -148,9 +148,8 @@
                     </button>
                 </div>
 
-                <!-- Contenedor dinámico para discrepancias múltiples -->
                 <div id="discrepanciasContainer" class="space-y-3 pt-1">
-                    <!-- Se inyecta al menos un ítem por defecto -->
+                    <!-- Dinámico -->
                 </div>
             </div>
 
@@ -208,12 +207,12 @@
         let codeReader = null;
         let currentStream = null;
         let isScanningActive = false;
-        const STORAGE_KEY = 'auditoria_cartones_android_v4';
+        const STORAGE_KEY = 'auditoria_cartones_android_v5';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             cargarRegistros();
-            agregarDiscrepanciaItem(); // Agregar un bloque de discrepancia inicial por defecto
+            agregarDiscrepanciaItem();
             
             document.getElementById('auditor').addEventListener('input', (e) => {
                 document.getElementById('headerAuditor').textContent = e.target.value ? `Auditor: ${e.target.value}` : 'Auditor: N/D';
@@ -279,7 +278,7 @@
             lucide.createIcons();
         }
 
-        // --- ESCÁNER DE CÁMARA PARA ANDROID (ZXing 0.19.1) ---
+        // --- ESCÁNER DE CÁMARA (Restaurado y optimizado) ---
         async function iniciarEscaneoCarton() {
             if (isScanningActive) return;
             isScanningActive = true;
@@ -316,10 +315,10 @@
                     }
                 });
             } catch (err) {
-                console.error("Error al iniciar cámara Android:", err);
+                console.error("Error al iniciar cámara:", err);
                 isScanningActive = false;
                 cerrarCamara();
-                alert("No se pudo acceder a la cámara. Asegúrate de otorgar permisos en el navegador.");
+                alert("No se pudo acceder a la cámara. Verifica los permisos del navegador.");
             }
         }
 
@@ -339,7 +338,7 @@
             document.body.classList.remove('modal-active');
         }
 
-        // --- GUARDADO DE REGISTROS Y LIMPIEZA COMPLETA ---
+        // --- GUARDADO Y LIMPIEZA ---
         function guardarRegistro() {
             const auditor = document.getElementById('auditor').value.trim();
             const turno = document.getElementById('turno').value.trim();
@@ -361,7 +360,6 @@
 
             const cajasAuditadas = parseInt(cajasAuditadasVal) || 0;
 
-            // Recopilar todas las discrepancias agregadas
             const discItems = document.querySelectorAll('.disc-item');
             const discrepanciasList = [];
 
@@ -371,12 +369,7 @@
                 const piezas = parseInt(item.querySelector('.disc-piezas').value) || 0;
                 const tipo = item.querySelector('.disc-tipo').value;
 
-                discrepanciasList.push({
-                    sku,
-                    cajas,
-                    piezas,
-                    tipo
-                });
+                discrepanciasList.push({ sku, cajas, piezas, tipo });
             });
 
             const ahora = new Date();
@@ -396,23 +389,15 @@
                 discrepancias: discrepanciasList
             };
 
-            // 1. Guardar primero en el arreglo y localStorage de manera exitosa
             registros.unshift(nuevoRegistro);
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
             } catch (e) {
-                alert("Error al guardar en el almacenamiento local.");
+                alert("Error al guardar en almacenamiento local.");
                 return;
             }
 
-            // 2. Únicamente después de confirmar el guardado exitoso, limpiar todos los campos
-            limpiarFormularioCompleto();
-            actualizarBadge();
-
-            alert("¡Registro guardado correctamente!");
-        }
-
-        function limpiarFormularioCompleto() {
+            // Limpieza completa de campos y formulario post-guardado exitoso
             document.getElementById('auditor').value = '';
             document.getElementById('turno').value = '';
             document.getElementById('supervisor').value = '';
@@ -422,10 +407,12 @@
             document.getElementById('cajasAuditadas').value = '';
             document.getElementById('headerAuditor').textContent = 'Auditor: N/D';
 
-            // Limpiar discrepancias y dejar una limpia por defecto
             const container = document.getElementById('discrepanciasContainer');
             container.innerHTML = '';
             agregarDiscrepanciaItem();
+
+            actualizarBadge();
+            alert("¡Registro guardado correctamente!");
         }
 
         function cargarRegistros() {
@@ -491,9 +478,7 @@
         function eliminarRegistro(idx) {
             if (confirm("¿Deseas eliminar este registro completo?")) {
                 registros.splice(idx, 1);
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
-                } catch (e) {}
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch (e) {}
                 renderizarLista();
                 actualizarBadge();
             }
@@ -503,15 +488,13 @@
             if (registros.length === 0) return;
             if (confirm("¿Estás seguro de borrar todos los registros?")) {
                 registros = [];
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
-                } catch (e) {}
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch (e) {}
                 renderizarLista();
                 actualizarBadge();
             }
         }
 
-        // --- EXPORTACIÓN CSV (ESTRUCTURA MANTENIDA CON REPETICIÓN) ---
+        // --- EXPORTACIÓN CSV ---
         function exportarCSV() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar.");
@@ -523,17 +506,9 @@
             registros.forEach(r => {
                 r.discrepancias.forEach(d => {
                     rows.push([
-                        `"${r.carton}"`,
-                        `"${r.destino}"`,
-                        `"${r.psq}"`,
-                        r.cajasAuditadas,
-                        `"${d.sku}"`,
-                        d.cajas,
-                        d.piezas,
-                        `"${d.tipo}"`,
-                        `"${r.auditor}"`,
-                        `"${r.hora}"`,
-                        `"${r.fecha}"`
+                        `"${r.carton}"`, `"${r.destino}"`, `"${r.psq}"`, r.cajasAuditadas,
+                        `"${d.sku}"`, d.cajas, d.piezas, `"${d.tipo}"`,
+                        `"${r.auditor}"`, `"${r.hora}"`, `"${r.fecha}"`
                     ]);
                 });
             });
@@ -551,7 +526,7 @@
             document.body.removeChild(link);
         }
 
-        // --- EXPORTACIÓN PDF (ESTRUCTURA CON ENCABEZADO GLOBAL) ---
+        // --- EXPORTACIÓN PDF ---
         function exportarPDF() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar a PDF.");
@@ -565,7 +540,6 @@
 
             doc.setFontSize(14);
             doc.text("Reporte de Auditoría de Cartones", 14, 15);
-            
             doc.setFontSize(10);
             doc.text(`Auditor: ${auditorInforme}`, 14, 22);
             doc.text(`Fecha del informe: ${fechaInforme}`, 100, 22);
@@ -575,17 +549,7 @@
 
             registros.forEach(r => {
                 r.discrepancias.forEach(d => {
-                    tableData.push([
-                        r.carton,
-                        r.destino,
-                        r.psq,
-                        r.cajasAuditadas,
-                        d.sku,
-                        d.cajas,
-                        d.piezas,
-                        d.tipo,
-                        r.hora
-                    ]);
+                    tableData.push([r.carton, r.destino, r.psq, r.cajasAuditadas, d.sku, d.cajas, d.piezas, d.tipo, r.hora]);
                 });
             });
 
