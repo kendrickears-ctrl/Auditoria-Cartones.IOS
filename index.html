@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Auditoría de Cartones (iOS Safari)</title>
+    <title>Auditoría de Cartones - General</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,8 +28,8 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- ZXing para lectura de códigos de barras (Versión estable compatible con iOS Safari) -->
-    <script src="https://unpkg.com/@zxing/library@0.19.1"></script>
+    <!-- ZXing para lectura de códigos de barras -->
+    <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 
     <!-- jsPDF & AutoTable para exportación a PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -57,9 +57,9 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i data-lucide="package-search" class="w-6 h-6 text-meli-blue"></i>
-                <h1 class="font-bold text-lg tracking-tight">Auditoría de Cartones <span class="text-xs bg-meli-blue text-white px-2 py-0.5 rounded-full ml-1">iOS Safari</span></h1>
+                <h1 class="font-bold text-lg tracking-tight">Auditoría de Cartones</h1>
             </div>
-            <span id="headerEmpleado" class="text-xs font-semibold bg-white/70 px-2.5 py-1 rounded-full border border-black/10">No Empleado</span>
+            <span id="headerAuditor" class="text-xs font-semibold bg-white/70 px-2.5 py-1 rounded-full border border-black/10">Auditor: N/D</span>
         </div>
     </header>
 
@@ -85,118 +85,93 @@
             <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="user-check" class="w-4 h-4 text-meli-blue"></i> Datos de la Sesión
+                        <i data-lucide="user-check" class="w-4 h-4 text-meli-blue"></i> Datos de Sesión
                     </h2>
                 </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Nº Empleado</label>
-                        <input type="text" id="numEmpleado" placeholder="Ej: 10293" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">PSQ</label>
-                        <input type="text" id="psq" placeholder="PSQ-01" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Auditor</label>
+                        <input type="text" id="auditor" placeholder="Nombre o ID del auditor" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 mb-1">Destino</label>
-                        <input type="text" id="destino" placeholder="GDL01" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                        <input type="text" id="destino" placeholder="Ej: GDL01" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">PSQ</label>
+                        <input type="text" id="psq" placeholder="Ej: PSQ-01" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
                     </div>
                 </div>
             </div>
 
-            <!-- Card 2: Cartón Actual -->
+            <!-- Card 2: Identificación del Cartón y Cajas Auditadas -->
             <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="box" class="w-4 h-4 text-meli-blue"></i> Identificación del Cartón
+                        <i data-lucide="box" class="w-4 h-4 text-meli-blue"></i> Cartón & Cajas
                     </h2>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Código de Cartón</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="cartonCode" placeholder="Escanea o escribe el cartón" class="flex-1 text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-mono">
-                        <button onclick="iniciarEscaneo('carton')" class="bg-meli-blue hover:bg-opacity-90 text-white px-3.5 py-2.5 rounded-lg flex items-center gap-1 font-semibold text-sm active:scale-95 transition-transform">
-                            <i data-lucide="camera" class="w-4 h-4"></i> Escanear
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card 3: Escaneo de Productos & Discrepancias -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 space-y-4">
-                <div class="flex justify-between items-center border-b pb-2">
-                    <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="barcode" class="w-4 h-4 text-meli-blue"></i> Lectura de Producto
-                    </h2>
-                </div>
-
-                <!-- Botón Ráfaga (iOS Safari UniScan) -->
-                <button onclick="iniciarEscaneo('rafaga')" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow flex items-center justify-center gap-2 text-base transition-all">
-                    <i data-lucide="zap" class="w-5 h-5"></i> Escanear Producto (Modo Ráfaga)
-                </button>
-
-                <div class="relative flex py-1 items-center">
-                    <div class="flex-grow border-t border-gray-200"></div>
-                    <span class="flex-shrink mx-3 text-xs text-gray-400 uppercase font-semibold">O Ingreso Manual</span>
-                    <div class="flex-grow border-t border-gray-200"></div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2">
-                    <div class="col-span-2">
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">SKU / EAN</label>
-                        <input type="text" id="skuInput" placeholder="Código de producto" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-mono">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Cartón (LPN)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="cartonCode" placeholder="Escanea o escribe el cartón" class="flex-1 text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-mono">
+                            <button onclick="iniciarEscaneoCarton()" class="bg-meli-blue hover:bg-opacity-90 text-white px-3.5 py-2.5 rounded-lg flex items-center gap-1 font-semibold text-sm active:scale-95 transition-transform">
+                                <i data-lucide="camera" class="w-4 h-4"></i> Escanear
+                            </button>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas Audit.</label>
-                        <input type="number" id="cajasInput" min="1" value="1" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none text-center font-bold">
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas Auditadas</label>
+                        <input type="number" id="cajasAuditadas" min="1" value="1" class="w-full text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-bold text-center">
                     </div>
                 </div>
-
-                <div class="border-t pt-3 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-gray-700 uppercase">¿Registrar Discrepancia?</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="toggleDiscrepancia" onchange="toggleSeccionDiscrepancia()" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
-                        </label>
-                    </div>
-
-                    <div id="panelDiscrepancia" class="hidden bg-amber-50 rounded-lg p-3 border border-amber-200 space-y-3">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-semibold text-amber-800 mb-1">Cajas Afectadas</label>
-                                <input type="number" id="cajasDisc" min="0" value="0" class="w-full text-sm p-2 bg-white rounded-lg border border-amber-300 focus:outline-none font-bold text-center">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-amber-800 mb-1">Tipo Discrepancia</label>
-                                <select id="tipoDisc" class="w-full text-sm p-2 bg-white rounded-lg border border-amber-300 focus:outline-none font-semibold">
-                                    <option value="Sobrante">Sobrante</option>
-                                    <option value="Faltante">Faltante</option>
-                                    <option value="Merma">Merma</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2">
-                            <div>
-                                <label class="block text-xs font-semibold text-amber-800 mb-1">Sobrante (pz)</label>
-                                <input type="number" id="sobrantePz" min="0" value="0" class="w-full text-sm p-1.5 bg-white rounded border border-amber-300 text-center">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-amber-800 mb-1">Faltante (pz)</label>
-                                <input type="number" id="faltantePz" min="0" value="0" class="w-full text-sm p-1.5 bg-white rounded border border-amber-300 text-center">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-amber-800 mb-1">Merma (pz)</label>
-                                <input type="number" id="mermaPz" min="0" value="0" class="w-full text-sm p-1.5 bg-white rounded border border-amber-300 text-center">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <button onclick="guardarRegistro()" class="w-full bg-meli-blue hover:bg-opacity-90 active:scale-98 text-white font-bold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 text-base transition-all">
-                    <i data-lucide="save" class="w-5 h-5"></i> Guardar Registro
-                </button>
             </div>
+
+            <!-- Card 3: Registro de Discrepancias -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 space-y-3">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i> Registro de Discrepancias
+                    </h2>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleDiscrepancia" onchange="toggleSeccionDiscrepancia()" class="sr-only peer">
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                </div>
+
+                <div id="panelDiscrepancia" class="hidden space-y-3 pt-1">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">SKU</label>
+                        <input type="text" id="discSku" placeholder="Código SKU del producto" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-mono">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas de Discrepancia</label>
+                            <input type="number" id="discCajas" min="0" value="0" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 text-center font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Piezas de Discrepancia</label>
+                            <input type="number" id="discPiezas" min="0" value="0" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 text-center font-bold">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Tipo de Discrepancia</label>
+                        <select id="tipoDiscrepancia" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 font-semibold">
+                            <option value="Ninguna">Ninguna</option>
+                            <option value="Sobrante">Sobrante</option>
+                            <option value="Faltante">Faltante</option>
+                            <option value="Merma">Merma</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="guardarRegistro()" class="w-full bg-meli-blue hover:bg-opacity-90 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow flex items-center justify-center gap-2 text-base transition-all">
+                <i data-lucide="save" class="w-5 h-5"></i> Guardar Registro
+            </button>
         </section>
 
         <!-- PESTAÑA 2: CONSULTA Y EXPORTACIÓN -->
@@ -206,7 +181,7 @@
                     <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV (Excel)
                 </button>
                 <button onclick="exportarPDF()" class="bg-red-700 hover:bg-red-800 text-white font-semibold py-2.5 px-2 rounded-lg text-xs flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> PDF (12 cols)
+                    <i data-lucide="file-text" class="w-4 h-4"></i> PDF Reporte
                 </button>
                 <button onclick="confirmarBorrarTodo()" class="bg-gray-100 hover:bg-red-50 text-red-600 border border-red-200 font-semibold py-2.5 px-2 rounded-lg text-xs flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform">
                     <i data-lucide="trash-2" class="w-4 h-4"></i> Borrar Todo
@@ -218,12 +193,12 @@
 
     </main>
 
-    <!-- MODAL DE CÁMARA -->
+    <!-- MODAL DE CÁMARA (Compatible Android / Universal) -->
     <div id="cameraModal" class="fixed inset-0 bg-black z-50 hidden flex flex-col justify-between">
         <div class="p-4 flex justify-between items-center text-white z-10 bg-gradient-to-b from-black/80 to-transparent">
             <div>
-                <h3 id="cameraModalTitle" class="font-bold text-base">Escaneando...</h3>
-                <p class="text-xs text-gray-300">Apunta la cámara al código de barras</p>
+                <h3 class="font-bold text-base">Escaneando Cartón (LPN)</h3>
+                <p class="text-xs text-gray-300">Apunta la cámara al código</p>
             </div>
             <button onclick="cerrarCamara()" class="bg-white/20 hover:bg-white/40 text-white p-2 rounded-full backdrop-blur-md">
                 <i data-lucide="x" class="w-6 h-6"></i>
@@ -238,49 +213,23 @@
         </div>
 
         <div class="p-4 text-center text-xs text-gray-300 bg-gradient-to-t from-black/80 to-transparent z-10">
-            Asegúrate de tener buena iluminación en la zona de trabajo
+            Cámara lista para captura en Android y Web
         </div>
     </div>
 
-    <!-- MODAL CAPTURA DE CANTIDAD -->
-    <div id="cantidadModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-xs rounded-2xl p-5 shadow-2xl space-y-4">
-            <div class="text-center">
-                <span class="text-xs font-bold text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded-full uppercase">Producto Escaneado</span>
-                <p id="modalSkuDetected" class="font-mono text-lg font-bold text-gray-800 mt-2 break-all">---</p>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1 text-center">Ingresa la cantidad de Cajas</label>
-                <input type="number" id="modalCajasCount" min="1" value="1" class="w-full text-2xl font-bold text-center p-2.5 bg-gray-50 rounded-xl border-2 border-emerald-500 focus:outline-none">
-            </div>
-
-            <div class="flex gap-2">
-                <button onclick="cancelarCantidadModal()" class="w-1/2 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm">
-                    Cancelar
-                </button>
-                <button onclick="confirmarCantidadModal()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow">
-                    Aceptar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SCRIPT -->
+    <!-- SCRIPT PRINCIPAL -->
     <script>
         let registros = [];
         let codeReader = null;
         let currentStream = null;
-        let targetScanMode = null;
-        let editingIndex = null;
         let isScanningActive = false;
-        const STORAGE_KEY = 'auditoria_cartones_ios_data_v1';
+        const STORAGE_KEY = 'auditoria_cartones_v2_data';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             cargarRegistros();
-            document.getElementById('numEmpleado').addEventListener('input', (e) => {
-                document.getElementById('headerEmpleado').textContent = e.target.value ? `Emp: ${e.target.value}` : 'No Empleado';
+            document.getElementById('auditor').addEventListener('input', (e) => {
+                document.getElementById('headerAuditor').textContent = e.target.value ? `Auditor: ${e.target.value}` : 'Auditor: N/D';
             });
         });
 
@@ -311,19 +260,17 @@
                 panel.classList.remove('hidden');
             } else {
                 panel.classList.add('hidden');
-                document.getElementById('cajasDisc').value = 0;
-                document.getElementById('sobrantePz').value = 0;
-                document.getElementById('faltantePz').value = 0;
-                document.getElementById('mermaPz').value = 0;
+                document.getElementById('discSku').value = '';
+                document.getElementById('discCajas').value = 0;
+                document.getElementById('discPiezas').value = 0;
+                document.getElementById('tipoDiscrepancia').value = 'Ninguna';
             }
         }
 
-        async function iniciarEscaneo(modo) {
+        async function iniciarEscaneoCarton() {
             if (isScanningActive) return;
             isScanningActive = true;
 
-            targetScanMode = modo;
-            document.getElementById('cameraModalTitle').textContent = modo === 'carton' ? 'Escaneando Cartón' : 'Escaneando Producto';
             document.getElementById('cameraModal').classList.remove('hidden');
             document.body.classList.add('modal-active');
 
@@ -334,171 +281,94 @@
 
                 try {
                     currentStream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: { exact: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
-                    });
-                } catch (e) {
-                    currentStream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
                     });
+                } catch (e) {
+                    currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
                 }
 
                 const videoElem = document.getElementById('videoPreview');
                 videoElem.srcObject = currentStream;
-                videoElem.setAttribute('autoplay', '');
-                videoElem.setAttribute('muted', '');
-                videoElem.setAttribute('playsinline', '');
-                videoElem.setAttribute('webkit-playsinline', '');
 
-                const iniciarDecodificacion = () => {
-                    videoElem.play().then(() => {
-                        codeReader.decodeFromVideoElementContinuously(videoElem, (result, err) => {
-                            if (result && isScanningActive) {
-                                isScanningActive = false;
-                                if (window.navigator && window.navigator.vibrate) {
-                                    window.navigator.vibrate(100);
-                                }
-                                const codigo = result.getText();
-                                cerrarCamara();
-                                procesarEscaneoCodigo(codigo);
-                            }
-                        });
-                    }).catch(playErr => {
-                        console.error("Error al reproducir video en iOS:", playErr);
+                codeReader.decodeFromVideoElement(videoElem, (result, err) => {
+                    if (result && isScanningActive) {
                         isScanningActive = false;
+                        if (window.navigator && window.navigator.vibrate) {
+                            window.navigator.vibrate(100);
+                        }
+                        document.getElementById('cartonCode').value = result.getText();
                         cerrarCamara();
-                    });
-                };
-
-                if (videoElem.readyState >= 1 || videoElem.videoWidth > 0) {
-                    iniciarDecodificacion();
-                } else {
-                    videoElem.onloadedmetadata = () => {
-                        iniciarDecodificacion();
-                    };
-                }
-
+                    }
+                });
             } catch (err) {
-                console.error("Error al acceder a la cámara:", err);
+                console.error("Error al abrir la cámara:", err);
                 isScanningActive = false;
                 cerrarCamara();
-                alert("No se pudo acceder a la cámara trasera. Asegúrate de abrir este sitio mediante un enlace seguro (HTTPS) y dar permisos en Safari.");
+                alert("No se pudo iniciar la cámara. Verifica los permisos del navegador.");
             }
         }
 
         function cerrarCamara() {
             isScanningActive = false;
-            
             if (codeReader) {
-                try { 
-                    codeReader.reset(); 
-                } catch (e) {}
+                try { codeReader.reset(); } catch (e) {}
             }
-
             if (currentStream) {
-                try {
-                    currentStream.getTracks().forEach(track => track.stop());
-                } catch (e) {}
+                try { currentStream.getTracks().forEach(track => track.stop()); } catch (e) {}
                 currentStream = null;
             }
-
             const videoElem = document.getElementById('videoPreview');
-            if (videoElem) {
-                try {
-                    videoElem.pause();
-                } catch (e) {}
-                videoElem.srcObject = null;
-                videoElem.onloadedmetadata = null;
-                videoElem.load();
-            }
+            if (videoElem) videoElem.srcObject = null;
 
-            const modal = document.getElementById('cameraModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-            
+            document.getElementById('cameraModal').classList.add('hidden');
             document.body.classList.remove('modal-active');
         }
 
-        function procesarEscaneoCodigo(codigo) {
-            if (targetScanMode === 'carton') {
-                document.getElementById('cartonCode').value = codigo;
-            } else if (targetScanMode === 'rafaga') {
-                document.getElementById('modalSkuDetected').textContent = codigo;
-                document.getElementById('modalCajasCount').value = 1;
-                document.getElementById('cantidadModal').classList.remove('hidden');
-                setTimeout(() => document.getElementById('modalCajasCount').focus(), 200);
-            }
-        }
-
-        function cancelarCantidadModal() {
-            document.getElementById('cantidadModal').classList.add('hidden');
-        }
-
-        function confirmarCantidadModal() {
-            const sku = document.getElementById('modalSkuDetected').textContent;
-            const cajas = parseInt(document.getElementById('modalCajasCount').value) || 1;
-
-            document.getElementById('skuInput').value = sku;
-            document.getElementById('cajasInput').value = cajas;
-            document.getElementById('cantidadModal').classList.add('hidden');
-        }
-
         function guardarRegistro() {
-            const numEmpleado = document.getElementById('numEmpleado').value.trim();
-            const psq = document.getElementById('psq').value.trim();
+            const auditor = document.getElementById('auditor').value.trim();
             const destino = document.getElementById('destino').value.trim();
+            const psq = document.getElementById('psq').value.trim();
             const carton = document.getElementById('cartonCode').value.trim();
-            const sku = document.getElementById('skuInput').value.trim();
-            const cajasAuditadas = parseInt(document.getElementById('cajasInput').value) || 0;
+            const cajasAuditadas = parseInt(document.getElementById('cajasAuditadas').value) || 0;
 
-            if (!numEmpleado || !carton || !sku) {
-                alert("Por favor completa los datos obligatorios: Nº Empleado, Código de Cartón y SKU.");
+            if (!auditor || !carton) {
+                alert("Por favor completa los campos obligatorios: Auditor y Cartón (LPN).");
                 return;
             }
 
-            const tieneDiscrepancia = document.getElementById('toggleDiscrepancia').checked;
-            const cajasDisc = tieneDiscrepancia ? (parseInt(document.getElementById('cajasDisc').value) || 0) : 0;
-            const tipoDisc = tieneDiscrepancia ? document.getElementById('tipoDisc').value : 'N/A';
-            const sobrante = tieneDiscrepancia ? (parseInt(document.getElementById('sobrantePz').value) || 0) : 0;
-            const faltante = tieneDiscrepancia ? (parseInt(document.getElementById('faltantePz').value) || 0) : 0;
-            const merma = tieneDiscrepancia ? (parseInt(document.getElementById('mermaPz').value) || 0) : 0;
+            const tieneDisc = document.getElementById('toggleDiscrepancia').checked;
+            const discSku = tieneDisc ? document.getElementById('discSku').value.trim() : 'N/A';
+            const discCajas = tieneDisc ? (parseInt(document.getElementById('discCajas').value) || 0) : 0;
+            const discPiezas = tieneDisc ? (parseInt(document.getElementById('discPiezas').value) || 0) : 0;
+            const tipoDiscrepancia = tieneDisc ? document.getElementById('tipoDiscrepancia').value : 'Ninguna';
 
             const ahora = new Date();
             const fechaStr = ahora.toLocaleDateString('es-MX');
             const horaStr = ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
             const nuevoRegistro = {
-                destino: destino || 'GDL',
+                auditor,
+                destino: destino || 'N/A',
                 psq: psq || 'N/A',
-                carton: carton,
-                numEmpleado: numEmpleado,
-                hora: horaStr,
+                carton,
+                cajasAuditadas,
+                discSku: discSku || 'N/A',
+                discCajas,
+                discPiezas,
+                tipoDiscrepancia,
                 fecha: fechaStr,
-                sku: sku,
-                cajasAuditadas: cajasAuditadas,
-                cajasConDiscrepancia: cajasDisc,
-                sobrante: sobrante,
-                faltante: faltante,
-                merma: merma,
-                tipoDiscrepancia: tipoDisc
+                hora: horaStr
             };
 
-            if (editingIndex !== null) {
-                registros[editingIndex] = nuevoRegistro;
-                editingIndex = null;
-                alert("Registro actualizado correctamente.");
-            } else {
-                registros.unshift(nuevoRegistro);
-            }
-
+            registros.unshift(nuevoRegistro);
             guardarEnLocalStorage();
-            limpiarFormularioDetalle();
-            actualizarBadge();
+            limpiarFormulario();
+            alert("¡Registro guardado exitosamente!");
         }
 
-        function limpiarFormularioDetalle() {
-            document.getElementById('skuInput').value = '';
-            document.getElementById('cajasInput').value = '1';
+        function limpiarFormulario() {
+            document.getElementById('cartonCode').value = '';
+            document.getElementById('cajasAuditadas').value = '1';
             document.getElementById('toggleDiscrepancia').checked = false;
             toggleSeccionDiscrepancia();
         }
@@ -513,6 +383,7 @@
 
         function guardarEnLocalStorage() {
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch (e) {}
+            actualizarBadge();
         }
 
         function actualizarBadge() {
@@ -525,7 +396,7 @@
                 container.innerHTML = `
                     <div class="bg-white rounded-xl p-8 text-center text-gray-400 border border-gray-200">
                         <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
-                        <p class="font-medium text-sm">No hay registros guardados en este turno.</p>
+                        <p class="font-medium text-sm">No hay registros guardados.</p>
                     </div>
                 `;
                 lucide.createIcons();
@@ -533,32 +404,29 @@
             }
 
             container.innerHTML = registros.map((reg, idx) => `
-                <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-200 space-y-2">
+                <div class="bg-white rounded-xl p-3.5 shadow-sm border border-gray-200 space-y-2">
                     <div class="flex justify-between items-start border-b border-gray-100 pb-2">
                         <div>
-                            <span class="text-xs font-bold text-meli-blue bg-blue-50 px-2 py-0.5 rounded">Destino: ${reg.destino}</span>
-                            <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded ml-1">PSQ: ${reg.psq}</span>
-                            <h4 class="font-mono font-bold text-sm text-gray-800 mt-1">Cartón: ${reg.carton}</h4>
+                            <span class="text-xs font-bold text-meli-blue bg-blue-50 px-2 py-0.5 rounded">LPN: ${reg.carton}</span>
+                            <span class="text-xs text-gray-500 ml-1">Dest: ${reg.destino} | PSQ: ${reg.psq}</span>
                         </div>
-                        <div class="text-right">
-                            <span class="text-[10px] text-gray-400 font-semibold">${reg.fecha} ${reg.hora}</span>
-                            <div class="flex justify-end gap-1 mt-1">
-                                <button onclick="editarRegistro(${idx})" class="p-1 text-blue-600 hover:bg-blue-50 rounded"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                <button onclick="eliminarRegistro(${idx})" class="p-1 text-red-600 hover:bg-red-50 rounded"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                        <button onclick="eliminarRegistro(${idx})" class="text-red-500 hover:text-red-700 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="grid grid-cols-2 text-xs gap-1">
+                        <div><span class="text-gray-400">Auditor:</span> <span class="font-semibold">${reg.auditor}</span></div>
+                        <div><span class="text-gray-400">Cajas Audit.:</span> <span class="font-bold">${reg.cajasAuditadas}</span></div>
+                        <div><span class="text-gray-400">Fecha/Hora:</span> <span class="text-gray-600">${reg.fecha} ${reg.hora}</span></div>
+                    </div>
+                    ${reg.tipoDiscrepancia !== 'Ninguna' ? `
+                        <div class="bg-amber-50 p-2 rounded-lg text-xs border border-amber-200 space-y-1">
+                            <div class="font-bold text-amber-900 flex justify-between">
+                                <span>Discrepancia: ${reg.tipoDiscrepancia}</span>
+                                <span class="font-mono">${reg.discSku}</span>
                             </div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 text-xs">
-                        <div><span class="text-gray-400">SKU:</span> <span class="font-mono font-semibold">${reg.sku}</span></div>
-                        <div><span class="text-gray-400">Cajas Audit.:</span> <span class="font-bold text-gray-700">${reg.cajasAuditadas}</span></div>
-                        <div><span class="text-gray-400">Emp:</span> <span class="font-semibold">${reg.numEmpleado}</span></div>
-                        <div><span class="text-gray-400">Cajas Disc:</span> <span class="font-semibold text-amber-600">${reg.cajasConDiscrepancia}</span></div>
-                    </div>
-                    ${(reg.sobrante > 0 || reg.faltante > 0 || reg.merma > 0) ? `
-                        <div class="bg-amber-50 p-1.5 rounded text-[11px] flex justify-between text-amber-900 border border-amber-200 font-semibold">
-                            <span>Sob: ${reg.sobrante}</span>
-                            <span>Falt: ${reg.faltante}</span>
-                            <span>Mer: ${reg.merma}</span>
+                            <div class="text-amber-800 flex justify-between">
+                                <span>Cajas disc: <b>${reg.discCajas}</b></span>
+                                <span>Piezas disc: <b>${reg.discPiezas}</b></span>
+                            </div>
                         </div>
                     ` : ''}
                 </div>
@@ -567,49 +435,19 @@
         }
 
         function eliminarRegistro(idx) {
-            if (confirm("¿Seguro que deseas eliminar este registro?")) {
+            if (confirm("¿Deseas eliminar este registro?")) {
                 registros.splice(idx, 1);
                 guardarEnLocalStorage();
                 renderizarLista();
-                actualizarBadge();
             }
-        }
-
-        function editarRegistro(idx) {
-            const reg = registros[idx];
-            editingIndex = idx;
-            document.getElementById('numEmpleado').value = reg.numEmpleado;
-            document.getElementById('psq').value = reg.psq;
-            document.getElementById('destino').value = reg.destino;
-            document.getElementById('cartonCode').value = reg.carton;
-            document.getElementById('skuInput').value = reg.sku;
-            document.getElementById('cajasInput').value = reg.cajasAuditadas;
-
-            if (reg.cajasConDiscrepancia > 0 || reg.sobrante > 0 || reg.faltante > 0 || reg.merma > 0) {
-                document.getElementById('toggleDiscrepancia').checked = true;
-                toggleSeccionDiscrepancia();
-                document.getElementById('cajasDisc').value = reg.cajasConDiscrepancia;
-                document.getElementById('tipoDisc').value = reg.tipoDiscrepancia || 'Sobrante';
-                document.getElementById('sobrantePz').value = reg.sobrante;
-                document.getElementById('faltantePz').value = reg.faltante;
-                document.getElementById('mermaPz').value = reg.merma;
-            } else {
-                document.getElementById('toggleDiscrepancia').checked = false;
-                toggleSeccionDiscrepancia();
-            }
-            switchTab('captura');
         }
 
         function confirmarBorrarTodo() {
-            if (registros.length === 0) {
-                alert("No hay registros para borrar.");
-                return;
-            }
-            if (confirm("ATENCIÓN: ¿Estás seguro de que deseas eliminar TODOS los registros del turno?")) {
+            if (registros.length === 0) return;
+            if (confirm("¿Estás seguro de borrar todos los registros?")) {
                 registros = [];
                 guardarEnLocalStorage();
                 renderizarLista();
-                actualizarBadge();
             }
         }
 
@@ -618,19 +456,18 @@
                 alert("No hay datos para exportar.");
                 return;
             }
-            const headers = ["Destino", "PSQ", "Carton", "Numero de Empleado", "Hora", "Fecha", "SKU", "Cajas Auditadas", "Cajas con Discrepancia", "Sobrante", "Faltante", "Merma"];
+            const headers = ["LPN", "Destino", "PSQ", "Cajas Auditadas", "SKU Discrepancia", "Cajas Discrepancia", "Piezas Discrepancia", "Tipo Discrepancia", "Auditor", "Hora", "Fecha"];
             const rows = registros.map(r => [
-                `"${r.destino}"`, `"${r.psq}"`, `"${r.carton}"`, `"${r.numEmpleado}"`, `"${r.hora}"`, `"${r.fecha}"`, `"${r.sku}"`,
-                r.cajasAuditadas, r.cajasConDiscrepancia, r.sobrante, r.faltante, r.merma
+                `"${r.carton}"`, `"${r.destino}"`, `"${r.psq}"`, r.cajasAuditadas, `"${r.discSku}"`, r.discCajas, r.discPiezas, `"${r.tipoDiscrepancia}"`, `"${r.auditor}"`, `"${r.hora}"`, `"${r.fecha}"`
             ]);
             let csvContent = "\uFEFF" + headers.join(";") + "\n";
-            rows.forEach(rowArray => { csvContent += rowArray.join(";") + "\n"; });
+            rows.forEach(row => { csvContent += row.join(";") + "\n"; });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", `Auditoria_Cartones_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute("download", `Auditoria_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -648,8 +485,10 @@
             doc.setFontSize(9);
             doc.text(`Generado el: ${new Date().toLocaleString('es-MX')}`, 14, 21);
 
-            const tableHeaders = [["Destino", "PSQ", "Cartón", "Empleado", "Hora", "Fecha", "SKU", "Caj. Aud", "Caj. Disc", "Sob", "Falt", "Mer"]];
-            const tableData = registros.map(r => [r.destino, r.psq, r.carton, r.numEmpleado, r.hora, r.fecha, r.sku, r.cajasAuditadas, r.cajasConDiscrepancia, r.sobrante, r.faltante, r.merma]);
+            const tableHeaders = [["LPN", "Destino", "PSQ", "Caj. Aud", "SKU Disc.", "Caj. Disc.", "Pz. Disc.", "Tipo Disc.", "Auditor", "Hora", "Fecha"]];
+            const tableData = registros.map(r => [
+                r.carton, r.destino, r.psq, r.cajasAuditadas, r.discSku, r.discCajas, r.discPiezas, r.tipoDiscrepancia, r.auditor, r.hora, r.fecha
+            ]);
 
             doc.autoTable({
                 head: tableHeaders,
@@ -660,54 +499,8 @@
                 headStyles: { fillColor: [45, 50, 119], textColor: [255, 255, 255], fontStyle: 'bold' },
                 alternateRowStyles: { fillColor: [245, 245, 245] }
             });
-            doc.save(`Auditoria_Cartones_${new Date().toISOString().slice(0,10)}.pdf`);
+            doc.save(`Auditoria_${new Date().toISOString().slice(0,10)}.pdf`);
         }
-    </script>
-
-    <!-- Consola Visual de Depuración para iPhone -->
-    <div id="debugConsole" style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.85); color: #00ff00; font-family: monospace; font-size: 11px; padding: 8px; max-height: 120px; overflow-y: auto; z-index: 99999; pointer-events: none;">
-        <b>Consola de Depuración iOS:</b><br>
-    </div>
-
-    <script>
-        (function() {
-            const consoleBox = document.getElementById('debugConsole');
-            
-            function safeStringify(arg) {
-                if (typeof arg === 'object' && arg !== null) {
-                    try {
-                        return JSON.stringify(arg);
-                    } catch (e) {
-                        return '[Objeto Circular o No Serializable]';
-                    }
-                }
-                return String(arg);
-            }
-
-            function logToScreen(type, args) {
-                const msg = Array.from(args).map(safeStringify).join(' ');
-                
-                const line = document.createElement('div');
-                line.style.color = type === 'error' ? '#ff5555' : '#00ff00';
-                line.textContent = `[${type}] ${msg}`;
-                
-                consoleBox.appendChild(line);
-                consoleBox.scrollTop = consoleBox.scrollHeight;
-            }
-
-            const oldLog = console.log;
-            const oldErr = console.error;
-            
-            console.log = function() { 
-                logToScreen('log', arguments); 
-                oldLog.apply(console, arguments); 
-            };
-            
-            console.error = function() { 
-                logToScreen('error', arguments); 
-                oldErr.apply(console, arguments); 
-            };
-        }())
     </script>
 </body>
 </html>
