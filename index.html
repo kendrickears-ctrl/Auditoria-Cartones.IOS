@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Auditoría de Cartones - General</title>
+    <title>Auditoría de Cartones (Android)</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,7 +28,7 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- ZXing para lectura de códigos de barras -->
+    <!-- ZXing para lectura de códigos de barras (Versión estable y robusta para Android) -->
     <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 
     <!-- jsPDF & AutoTable para exportación a PDF -->
@@ -57,7 +57,7 @@
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <i data-lucide="package-search" class="w-6 h-6 text-meli-blue"></i>
-                <h1 class="font-bold text-lg tracking-tight">Auditoría de Cartones</h1>
+                <h1 class="font-bold text-lg tracking-tight">Auditoría de Cartones <span class="text-xs bg-meli-blue text-white px-2 py-0.5 rounded-full ml-1">Android</span></h1>
             </div>
             <span id="headerAuditor" class="text-xs font-semibold bg-white/70 px-2.5 py-1 rounded-full border border-black/10">Auditor: N/D</span>
         </div>
@@ -81,91 +81,64 @@
         <!-- PESTAÑA 1: CAPTURA -->
         <section id="tabCaptura" class="space-y-4">
 
-            <!-- Card 1: Datos de Sesión -->
+            <!-- Card 1: Campos de Captura -->
             <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="user-check" class="w-4 h-4 text-meli-blue"></i> Datos de Sesión
+                        <i data-lucide="box" class="w-4 h-4 text-meli-blue"></i> Datos de Auditoría
                     </h2>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="col-span-2">
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Auditor</label>
-                        <input type="text" id="auditor" placeholder="Nombre o ID del auditor" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+
+                <!-- 1. Cartón (con botón de escaneo dedicado para Android) -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Cartón (LPN)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="cartonCode" placeholder="Escanea o escribe el cartón" class="flex-1 text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-mono">
+                        <button onclick="iniciarEscaneoCarton()" class="bg-meli-blue hover:bg-opacity-90 text-white px-3.5 py-2.5 rounded-lg flex items-center gap-1 font-semibold text-sm active:scale-95 transition-transform">
+                            <i data-lucide="camera" class="w-4 h-4"></i> Escanear
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Destino</label>
-                        <input type="text" id="destino" placeholder="Ej: GDL01" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">PSQ</label>
-                        <input type="text" id="psq" placeholder="Ej: PSQ-01" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
-                    </div>
+                </div>
+
+                <!-- 2. Destino -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Destino</label>
+                    <input type="text" id="destino" placeholder="Ej: 3782" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                </div>
+
+                <!-- 3. PSQ -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">PSQ</label>
+                    <input type="text" id="psq" placeholder="Ej: PSQ045" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                </div>
+
+                <!-- 4. Auditor -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Auditor</label>
+                    <input type="text" id="auditor" placeholder="Nombre o ID del auditor" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                </div>
+
+                <!-- 5. Cajas auditadas -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas auditadas</label>
+                    <input type="number" id="cajasAuditadas" min="1" value="1" class="w-full text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-bold text-center">
                 </div>
             </div>
 
-            <!-- Card 2: Identificación del Cartón y Cajas Auditadas -->
+            <!-- Card 2: Apartado de Discrepancias Múltiples -->
             <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="box" class="w-4 h-4 text-meli-blue"></i> Cartón & Cajas
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i> Discrepancias
                     </h2>
-                </div>
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Cartón (LPN)</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="cartonCode" placeholder="Escanea o escribe el cartón" class="flex-1 text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-mono">
-                            <button onclick="iniciarEscaneoCarton()" class="bg-meli-blue hover:bg-opacity-90 text-white px-3.5 py-2.5 rounded-lg flex items-center gap-1 font-semibold text-sm active:scale-95 transition-transform">
-                                <i data-lucide="camera" class="w-4 h-4"></i> Escanear
-                            </button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas Auditadas</label>
-                        <input type="number" id="cajasAuditadas" min="1" value="1" class="w-full text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-bold text-center">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card 3: Registro de Discrepancias -->
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 space-y-3">
-                <div class="flex justify-between items-center border-b pb-2">
-                    <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i> Registro de Discrepancias
-                    </h2>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggleDiscrepancia" onchange="toggleSeccionDiscrepancia()" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
-                    </label>
+                    <button onclick="agregarDiscrepanciaItem()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm flex items-center gap-1 transition-all active:scale-95">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agregar otra discrepancia
+                    </button>
                 </div>
 
-                <div id="panelDiscrepancia" class="hidden space-y-3 pt-1">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">SKU</label>
-                        <input type="text" id="discSku" placeholder="Código SKU del producto" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-mono">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas de Discrepancia</label>
-                            <input type="number" id="discCajas" min="0" value="0" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 text-center font-bold">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-500 mb-1">Piezas de Discrepancia</label>
-                            <input type="number" id="discPiezas" min="0" value="0" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 text-center font-bold">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Tipo de Discrepancia</label>
-                        <select id="tipoDiscrepancia" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 font-semibold">
-                            <option value="Ninguna">Ninguna</option>
-                            <option value="Sobrante">Sobrante</option>
-                            <option value="Faltante">Faltante</option>
-                            <option value="Merma">Merma</option>
-                        </select>
-                    </div>
+                <!-- Contenedor dinámico para discrepancias múltiples -->
+                <div id="discrepanciasContainer" class="space-y-3 pt-1">
+                    <!-- Se inyecta al menos un ítem por defecto -->
                 </div>
             </div>
 
@@ -193,12 +166,12 @@
 
     </main>
 
-    <!-- MODAL DE CÁMARA (Compatible Android / Universal) -->
+    <!-- MODAL DE CÁMARA PARA ANDROID -->
     <div id="cameraModal" class="fixed inset-0 bg-black z-50 hidden flex flex-col justify-between">
         <div class="p-4 flex justify-between items-center text-white z-10 bg-gradient-to-b from-black/80 to-transparent">
             <div>
-                <h3 class="font-bold text-base">Escaneando Cartón (LPN)</h3>
-                <p class="text-xs text-gray-300">Apunta la cámara al código</p>
+                <h3 class="font-bold text-base">Escaneando Cartón (Android)</h3>
+                <p class="text-xs text-gray-300">Apunta al código de barras del LPN</p>
             </div>
             <button onclick="cerrarCamara()" class="bg-white/20 hover:bg-white/40 text-white p-2 rounded-full backdrop-blur-md">
                 <i data-lucide="x" class="w-6 h-6"></i>
@@ -206,14 +179,14 @@
         </div>
 
         <div class="relative flex-1 flex items-center justify-center overflow-hidden bg-black">
-            <video id="videoPreview" autoplay playsinline webkit-playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
+            <video id="videoPreview" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
             <div class="relative w-64 h-40 border-2 border-emerald-400 rounded-lg z-10 flex items-center justify-center scanner-target">
                 <div class="w-full h-0.5 bg-red-500 shadow-md animate-pulse"></div>
             </div>
         </div>
 
         <div class="p-4 text-center text-xs text-gray-300 bg-gradient-to-t from-black/80 to-transparent z-10">
-            Cámara lista para captura en Android y Web
+            Mantén estable el dispositivo frente al código
         </div>
     </div>
 
@@ -223,11 +196,13 @@
         let codeReader = null;
         let currentStream = null;
         let isScanningActive = false;
-        const STORAGE_KEY = 'auditoria_cartones_v2_data';
+        const STORAGE_KEY = 'auditoria_cartones_android_v3';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             cargarRegistros();
+            agregarDiscrepanciaItem(); // Agregar un bloque de discrepancia inicial por defecto
+            
             document.getElementById('auditor').addEventListener('input', (e) => {
                 document.getElementById('headerAuditor').textContent = e.target.value ? `Auditor: ${e.target.value}` : 'Auditor: N/D';
             });
@@ -253,20 +228,46 @@
             }
         }
 
-        function toggleSeccionDiscrepancia() {
-            const isChecked = document.getElementById('toggleDiscrepancia').checked;
-            const panel = document.getElementById('panelDiscrepancia');
-            if (isChecked) {
-                panel.classList.remove('hidden');
-            } else {
-                panel.classList.add('hidden');
-                document.getElementById('discSku').value = '';
-                document.getElementById('discCajas').value = 0;
-                document.getElementById('discPiezas').value = 0;
-                document.getElementById('tipoDiscrepancia').value = 'Ninguna';
-            }
+        // --- GESTIÓN DE DISCREPANCIAS MÚLTIPLES ---
+        function agregarDiscrepanciaItem(sku = '', cajas = 0, piezas = 0, tipo = 'Faltante') {
+            const container = document.getElementById('discrepanciasContainer');
+            const index = container.children.length;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'bg-amber-50 rounded-xl p-3 border border-amber-200 space-y-2 relative disc-item';
+            itemDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-amber-900 uppercase">Discrepancia #${index + 1}</span>
+                    ${index > 0 ? `<button type="button" onclick="this.closest('.disc-item').remove()" class="text-red-500 hover:text-red-700 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-amber-800 mb-1">SKU</label>
+                    <input type="text" class="disc-sku w-full text-sm p-2 bg-white rounded-lg border border-amber-300 focus:outline-none font-mono" placeholder="Código SKU" value="${sku}">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-amber-800 mb-1">Cajas</label>
+                        <input type="number" min="0" class="disc-cajas w-full text-sm p-2 bg-white rounded-lg border border-amber-300 text-center font-bold" value="${cajas}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-amber-800 mb-1">Piezas</label>
+                        <input type="number" min="0" class="disc-piezas w-full text-sm p-2 bg-white rounded-lg border border-amber-300 text-center font-bold" value="${piezas}">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-amber-800 mb-1">Tipo de discrepancia</label>
+                    <select class="disc-tipo w-full text-sm p-2 bg-white rounded-lg border border-amber-300 font-semibold">
+                        <option value="Faltante" ${tipo === 'Faltante' ? 'selected' : ''}>Faltante</option>
+                        <option value="Sobrante" ${tipo === 'Sobrante' ? 'selected' : ''}>Sobrante</option>
+                        <option value="Merma" ${tipo === 'Merma' ? 'selected' : ''}>Merma</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(itemDiv);
+            lucide.createIcons();
         }
 
+        // --- ESCÁNER DE CÁMARA PARA ANDROID (ZXing 0.19.1) ---
         async function iniciarEscaneoCarton() {
             if (isScanningActive) return;
             isScanningActive = true;
@@ -281,16 +282,18 @@
 
                 try {
                     currentStream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                        video: { facingMode: { exact: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
                     });
                 } catch (e) {
-                    currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    currentStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
                 }
 
                 const videoElem = document.getElementById('videoPreview');
                 videoElem.srcObject = currentStream;
 
-                codeReader.decodeFromVideoElement(videoElem, (result, err) => {
+                codeReader.decodeFromVideoElementContinuously(videoElem, (result, err) => {
                     if (result && isScanningActive) {
                         isScanningActive = false;
                         if (window.navigator && window.navigator.vibrate) {
@@ -301,10 +304,10 @@
                     }
                 });
             } catch (err) {
-                console.error("Error al abrir la cámara:", err);
+                console.error("Error al iniciar cámara Android:", err);
                 isScanningActive = false;
                 cerrarCamara();
-                alert("No se pudo iniciar la cámara. Verifica los permisos del navegador.");
+                alert("No se pudo acceder a la cámara. Asegúrate de otorgar permisos en el navegador.");
             }
         }
 
@@ -324,53 +327,65 @@
             document.body.classList.remove('modal-active');
         }
 
+        // --- GUARDADO DE REGISTROS ---
         function guardarRegistro() {
-            const auditor = document.getElementById('auditor').value.trim();
+            const carton = document.getElementById('cartonCode').value.trim();
             const destino = document.getElementById('destino').value.trim();
             const psq = document.getElementById('psq').value.trim();
-            const carton = document.getElementById('cartonCode').value.trim();
+            const auditor = document.getElementById('auditor').value.trim();
             const cajasAuditadas = parseInt(document.getElementById('cajasAuditadas').value) || 0;
 
-            if (!auditor || !carton) {
-                alert("Por favor completa los campos obligatorios: Auditor y Cartón (LPN).");
+            if (!carton || !auditor) {
+                alert("Por favor completa los campos obligatorios: Cartón (LPN) y Auditor.");
                 return;
             }
 
-            const tieneDisc = document.getElementById('toggleDiscrepancia').checked;
-            const discSku = tieneDisc ? document.getElementById('discSku').value.trim() : 'N/A';
-            const discCajas = tieneDisc ? (parseInt(document.getElementById('discCajas').value) || 0) : 0;
-            const discPiezas = tieneDisc ? (parseInt(document.getElementById('discPiezas').value) || 0) : 0;
-            const tipoDiscrepancia = tieneDisc ? document.getElementById('tipoDiscrepancia').value : 'Ninguna';
+            // Recopilar todas las discrepancias agregadas
+            const discItems = document.querySelectorAll('.disc-item');
+            const discrepanciasList = [];
+
+            discItems.forEach(item => {
+                const sku = item.querySelector('.disc-sku').value.trim() || 'N/A';
+                const cajas = parseInt(item.querySelector('.disc-cajas').value) || 0;
+                const piezas = parseInt(item.querySelector('.disc-piezas').value) || 0;
+                const tipo = item.querySelector('.disc-tipo').value;
+
+                discrepanciasList.push({
+                    sku,
+                    cajas,
+                    piezas,
+                    tipo
+                });
+            });
 
             const ahora = new Date();
             const fechaStr = ahora.toLocaleDateString('es-MX');
             const horaStr = ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
             const nuevoRegistro = {
-                auditor,
+                carton,
                 destino: destino || 'N/A',
                 psq: psq || 'N/A',
-                carton,
                 cajasAuditadas,
-                discSku: discSku || 'N/A',
-                discCajas,
-                discPiezas,
-                tipoDiscrepancia,
+                auditor,
                 fecha: fechaStr,
-                hora: horaStr
+                hora: horaStr,
+                discrepancias: discrepanciasList
             };
 
             registros.unshift(nuevoRegistro);
             guardarEnLocalStorage();
             limpiarFormulario();
-            alert("¡Registro guardado exitosamente!");
+            alert("¡Registro guardado correctamente!");
         }
 
         function limpiarFormulario() {
             document.getElementById('cartonCode').value = '';
             document.getElementById('cajasAuditadas').value = '1';
-            document.getElementById('toggleDiscrepancia').checked = false;
-            toggleSeccionDiscrepancia();
+            document.getElementById('discrepanciasContainer.innerHTML = ""');
+            const container = document.getElementById('discrepanciasContainer');
+            container.innerHTML = '';
+            agregarDiscrepanciaItem(); // Dejar una discrepancia limpia por defecto
         }
 
         function cargarRegistros() {
@@ -417,25 +432,27 @@
                         <div><span class="text-gray-400">Cajas Audit.:</span> <span class="font-bold">${reg.cajasAuditadas}</span></div>
                         <div><span class="text-gray-400">Fecha/Hora:</span> <span class="text-gray-600">${reg.fecha} ${reg.hora}</span></div>
                     </div>
-                    ${reg.tipoDiscrepancia !== 'Ninguna' ? `
-                        <div class="bg-amber-50 p-2 rounded-lg text-xs border border-amber-200 space-y-1">
-                            <div class="font-bold text-amber-900 flex justify-between">
-                                <span>Discrepancia: ${reg.tipoDiscrepancia}</span>
-                                <span class="font-mono">${reg.discSku}</span>
+                    <div class="space-y-1.5 pt-1">
+                        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Discrepancias (${reg.discrepancias.length}):</div>
+                        ${reg.discrepancias.map(d => `
+                            <div class="bg-amber-50 p-2 rounded-lg text-xs border border-amber-200 flex justify-between items-center">
+                                <div>
+                                    <span class="font-mono font-bold text-amber-900">${d.sku}</span>
+                                    <span class="text-amber-800 ml-1">(${d.tipo})</span>
+                                </div>
+                                <div class="text-right text-amber-900 font-semibold">
+                                    <span>Caj: ${d.cajas}</span> | <span>Pz: ${d.piezas}</span>
+                                </div>
                             </div>
-                            <div class="text-amber-800 flex justify-between">
-                                <span>Cajas disc: <b>${reg.discCajas}</b></span>
-                                <span>Piezas disc: <b>${reg.discPiezas}</b></span>
-                            </div>
-                        </div>
-                    ` : ''}
+                        `).join('')}
+                    </div>
                 </div>
             `).join('');
             lucide.createIcons();
         }
 
         function eliminarRegistro(idx) {
-            if (confirm("¿Deseas eliminar este registro?")) {
+            if (confirm("¿Deseas eliminar este registro completo?")) {
                 registros.splice(idx, 1);
                 guardarEnLocalStorage();
                 renderizarLista();
@@ -451,15 +468,33 @@
             }
         }
 
+        // --- EXPORTACIÓN CSV (EXACTAMENTE CON LA MISMA ESTRUCTURA Y REPETICIÓN DE FILAS) ---
         function exportarCSV() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar.");
                 return;
             }
             const headers = ["LPN", "Destino", "PSQ", "Cajas Auditadas", "SKU Discrepancia", "Cajas Discrepancia", "Piezas Discrepancia", "Tipo Discrepancia", "Auditor", "Hora", "Fecha"];
-            const rows = registros.map(r => [
-                `"${r.carton}"`, `"${r.destino}"`, `"${r.psq}"`, r.cajasAuditadas, `"${r.discSku}"`, r.discCajas, r.discPiezas, `"${r.tipoDiscrepancia}"`, `"${r.auditor}"`, `"${r.hora}"`, `"${r.fecha}"`
-            ]);
+            const rows = [];
+
+            registros.forEach(r => {
+                r.discrepancias.forEach(d => {
+                    rows.push([
+                        `"${r.carton}"`,
+                        `"${r.destino}"`,
+                        `"${r.psq}"`,
+                        r.cajasAuditadas,
+                        `"${d.sku}"`,
+                        d.cajas,
+                        d.piezas,
+                        `"${d.tipo}"`,
+                        `"${r.auditor}"`,
+                        `"${r.hora}"`,
+                        `"${r.fecha}"`
+                    ]);
+                });
+            });
+
             let csvContent = "\uFEFF" + headers.join(";") + "\n";
             rows.forEach(row => { csvContent += row.join(";") + "\n"; });
 
@@ -467,12 +502,13 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", `Auditoria_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute("download", `Auditoria_Cartones_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
+        // --- EXPORTACIÓN PDF (CON ENCABEZADO GLOBAL Y FILAS INDEPENDIENTES REPETIDAS) ---
         function exportarPDF() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar a PDF.");
@@ -480,26 +516,48 @@
             }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
+
+            // Obtener auditor general (tomado del último registro o N/D) y fecha actual del informe
+            const auditorInforme = registros.length > 0 ? registros[0].auditor : 'N/D';
+            const fechaInforme = new Date().toLocaleDateString('es-MX');
+
             doc.setFontSize(14);
             doc.text("Reporte de Auditoría de Cartones", 14, 15);
-            doc.setFontSize(9);
-            doc.text(`Generado el: ${new Date().toLocaleString('es-MX')}`, 14, 21);
+            
+            doc.setFontSize(10);
+            doc.text(`Auditor: ${auditorInforme}`, 14, 22);
+            doc.text(`Fecha del informe: ${fechaInforme}`, 100, 22);
 
-            const tableHeaders = [["LPN", "Destino", "PSQ", "Caj. Aud", "SKU Disc.", "Caj. Disc.", "Pz. Disc.", "Tipo Disc.", "Auditor", "Hora", "Fecha"]];
-            const tableData = registros.map(r => [
-                r.carton, r.destino, r.psq, r.cajasAuditadas, r.discSku, r.discCajas, r.discPiezas, r.tipoDiscrepancia, r.auditor, r.hora, r.fecha
-            ]);
+            const tableHeaders = [["LPN / Cartón", "Destino", "PSQ", "Cajas auditadas", "SKU", "Cajas", "Piezas", "Tipo", "Hora"]];
+            const tableData = [];
+
+            registros.forEach(r => {
+                r.discrepancias.forEach(d => {
+                    tableData.push([
+                        r.carton,
+                        r.destino,
+                        r.psq,
+                        r.cajasAuditadas,
+                        d.sku,
+                        d.cajas,
+                        d.piezas,
+                        d.tipo,
+                        r.hora
+                    ]);
+                });
+            });
 
             doc.autoTable({
                 head: tableHeaders,
                 body: tableData,
-                startY: 25,
+                startY: 27,
                 theme: 'grid',
-                styles: { fontSize: 7, cellPadding: 2 },
+                styles: { fontSize: 8, cellPadding: 2 },
                 headStyles: { fillColor: [45, 50, 119], textColor: [255, 255, 255], fontStyle: 'bold' },
                 alternateRowStyles: { fillColor: [245, 245, 245] }
             });
-            doc.save(`Auditoria_${new Date().toISOString().slice(0,10)}.pdf`);
+
+            doc.save(`Auditoria_Cartones_${new Date().toISOString().slice(0,10)}.pdf`);
         }
     </script>
 </body>
