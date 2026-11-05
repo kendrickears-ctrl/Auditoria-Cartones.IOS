@@ -207,7 +207,7 @@
         let codeReader = null;
         let currentStream = null;
         let isScanningActive = false;
-        const STORAGE_KEY = 'auditoria_cartones_android_v7';
+        const STORAGE_KEY = 'auditoria_cartones_android_v8';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -240,7 +240,7 @@
         }
 
         // --- GESTIÓN DE DISCREPANCIAS MÚLTIPLES ---
-        function agregarDiscrepanciaItem(sku = '', cajas = 0, piezas = 0, tipo = 'Faltante') {
+        function agregarDiscrepanciaItem(sku = '', cajas = 0, piezas = 0, tipo = '') {
             const container = document.getElementById('discrepanciasContainer');
             const index = container.children.length;
 
@@ -268,8 +268,9 @@
                 <div>
                     <label class="block text-xs font-semibold text-amber-800 mb-1">Tipo de discrepancia</label>
                     <select class="disc-tipo w-full text-sm p-2 bg-white rounded-lg border border-amber-300 font-semibold">
-                        <option value="Faltante" ${tipo === 'Faltante' ? 'selected' : ''}>Faltante</option>
+                        <option value="" ${tipo === '' ? 'selected' : ''}>-- Seleccionar tipo --</option>
                         <option value="Sobrante" ${tipo === 'Sobrante' ? 'selected' : ''}>Sobrante</option>
+                        <option value="Faltante" ${tipo === 'Faltante' ? 'selected' : ''}>Faltante</option>
                         <option value="Merma" ${tipo === 'Merma' ? 'selected' : ''}>Merma</option>
                     </select>
                 </div>
@@ -364,12 +365,15 @@
             const discrepanciasList = [];
 
             discItems.forEach(item => {
-                const sku = item.querySelector('.disc-sku').value.trim() || 'N/A';
+                const sku = item.querySelector('.disc-sku').value.trim() || '';
                 const cajas = parseInt(item.querySelector('.disc-cajas').value) || 0;
                 const piezas = parseInt(item.querySelector('.disc-piezas').value) || 0;
                 const tipo = item.querySelector('.disc-tipo').value;
 
-                discrepanciasList.push({ sku, cajas, piezas, tipo });
+                // Solo guardar si se seleccionó un tipo o se llenaron datos
+                if (tipo !== '' || sku !== '' || cajas > 0 || piezas > 0) {
+                    discrepanciasList.push({ sku, cajas, piezas, tipo });
+                }
             });
 
             const ahora = new Date();
@@ -458,11 +462,12 @@
                     </div>
                     <div class="space-y-1.5 pt-1">
                         <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Discrepancias (${reg.discrepancias.length}):</div>
+                        ${reg.discrepancias.length === 0 ? '<div class="text-xs text-gray-400 italic">Sin discrepancias</div>' : ''}
                         ${reg.discrepancias.map(d => `
                             <div class="bg-amber-50 p-2 rounded-lg text-xs border border-amber-200 flex justify-between items-center">
                                 <div>
-                                    <span class="font-mono font-bold text-amber-900">${d.sku}</span>
-                                    <span class="text-amber-800 ml-1">(${d.tipo})</span>
+                                    <span class="font-mono font-bold text-amber-900">${d.sku || 'N/A'}</span>
+                                    <span class="text-amber-800 ml-1">(${d.tipo || 'Sin tipo'})</span>
                                 </div>
                                 <div class="text-right text-amber-900 font-semibold">
                                     <span>Caj: ${d.cajas}</span> | <span>Pz: ${d.piezas}</span>
@@ -504,13 +509,21 @@
             const rows = [];
 
             registros.forEach(r => {
-                r.discrepancias.forEach(d => {
+                if (r.discrepancias.length === 0) {
                     rows.push([
                         `"${r.carton}"`, `"${r.destino}"`, `"${r.psq}"`, r.cajasAuditadas,
-                        `"${d.sku}"`, d.cajas, d.piezas, `"${d.tipo}"`,
+                        `""`, 0, 0, `""`,
                         `"${r.auditor}"`, `"${r.hora}"`, `"${r.fecha}"`
                     ]);
-                });
+                } else {
+                    r.discrepancias.forEach(d => {
+                        rows.push([
+                            `"${r.carton}"`, `"${r.destino}"`, `"${r.psq}"`, r.cajasAuditadas,
+                            `"${d.sku}"`, d.cajas, d.piezas, `"${d.tipo}"`,
+                            `"${r.auditor}"`, `"${r.hora}"`, `"${r.fecha}"`
+                        ]);
+                    });
+                }
             });
 
             let csvContent = "\uFEFF" + headers.join(";") + "\n";
@@ -526,7 +539,7 @@
             document.body.removeChild(link);
         }
 
-        // --- EXPORTACIÓN PDF (CON EL NUEVO ORDEN DE COLUMNAS Y ENCABEZADO AGRUPADO) ---
+        // --- EXPORTACIÓN PDF (CON DATOS GENERALES, RESUMEN Y TABLA EXACTA) ---
         function exportarPDF() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar a PDF.");
@@ -535,54 +548,122 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
 
-            const auditorInforme = registros.length > 0 ? registros[0].auditor : 'N/D';
+            const auditorInforme = registros.length > 0 && registros[0].auditor ? registros[0].auditor : 'N/D';
             const fechaInforme = new Date().toLocaleDateString('es-MX');
 
-            doc.setFontSize(14);
-            doc.text("Reporte de Auditoría de Cartones", 14, 15);
-            doc.setFontSize(10);
-            doc.text(`Auditor: ${auditorInforme}`, 14, 22);
-            doc.text(`Fecha del informe: ${fechaInforme}`, 100, 22);
+            // --- CÁLCULO DE TOTALES PARA EL RESUMEN ---
+            // 1. Total de cartones auditados (contar cada cartón único una sola vez)
+            const cartonesUnicos = new Set();
+            registros.forEach(r => { if (r.carton) cartonesUnicos.add(r.carton); });
+            const totalCartones = cartonesUnicos.size;
 
+            // 2. Sumar las cajas auditadas de los registros (sin duplicar si hay varias discrepancias)
+            let totalCajasAuditadas = 0;
+            // Para evitar sumar varias veces las cajas auditadas de un mismo cartón si se registraron varias discrepancias:
+            const cajasPorCarton = {};
+            registros.forEach(r => {
+                if (r.carton) {
+                    cajasPorCarton[r.carton] = r.cajasAuditadas || 0;
+                }
+            });
+            Object.values(cajasPorCarton).forEach(c => { totalCajasAuditadas += c; });
+
+            // 3. Totales de discrepancias (cajas por tipo)
+            let cajasConDiscrepancia = 0;
+            let totalSobrantes = 0;
+            let totalFaltantes = 0;
+            let totalMermas = 0;
+
+            registros.forEach(r => {
+                r.discrepancias.forEach(d => {
+                    const caj = parseInt(d.cajas) || 0;
+                    cajasConDiscrepancia += caj;
+                    if (d.tipo === 'Sobrante') {
+                        totalSobrantes += caj;
+                    } else if (d.tipo === 'Faltante') {
+                        totalFaltantes += caj;
+                    } else if (d.tipo === 'Merma') {
+                        totalMermas += caj;
+                    }
+                });
+            });
+
+            // --- DIBUJAR ENCABEZADO Y RESUMEN EN EL PDF ---
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Reporte de Auditoría de Cartones", 14, 15);
+
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text("DATOS GENERALES", 14, 23);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Fecha del informe: ${fechaInforme}`, 14, 29);
+            doc.text(`Nombre del auditor: ${auditorInforme}`, 100, 29);
+
+            doc.setFont('helvetica', 'bold');
+            doc.text("RESUMEN DE AUDITORÍA", 14, 37);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Total de cartones auditados: ${totalCartones}`, 14, 43);
+            doc.text(`Total de cajas auditadas: ${totalCajasAuditadas}`, 75, 43);
+            doc.text(`Total de cajas con discrepancia: ${cajasConDiscrepancia}`, 140, 43);
+            doc.text(`Total de cajas sobrantes: ${totalSobrantes}`, 14, 49);
+            doc.text(`Total de cajas faltantes: ${totalFaltantes}`, 75, 49);
+            doc.text(`Total de cajas con merma: ${totalMermas}`, 140, 49);
+
+            // --- TABLA DE DESGLOSE ---
             const tableHeaders = [
                 [
-                    { content: 'CARTON', rowSpan: 2 }, 
-                    { content: 'DESTINO', rowSpan: 2 }, 
-                    { content: 'PSQ', rowSpan: 2 }, 
-                    { content: 'CAJAS AUDITADAS', rowSpan: 2 }, 
-                    { content: 'DISCREPANCIA', rowSpan: 2 },
+                    { content: 'Cartón / LPN', rowSpan: 2 }, 
+                    { content: 'Pick Sequence (PSQ)', rowSpan: 2 }, 
+                    { content: 'Destino', rowSpan: 2 }, 
+                    { content: 'Total de cajas auditadas', rowSpan: 2 }, 
+                    { content: 'Discrepancia', rowSpan: 2 },
                     { content: 'DATOS DISCREPANCIA', colSpan: 3, styles: { halign: 'center', fillColor: [45, 50, 119] } }, 
-                    { content: 'HORA', rowSpan: 2 }
+                    { content: 'Hora', rowSpan: 2 }
                 ],
                 [
                     'SKU', 
-                    'CAJAS', 
-                    'PIEZAS'
+                    'Cajas', 
+                    'Piezas'
                 ]
             ];
 
             const tableData = [];
 
             registros.forEach(r => {
-                r.discrepancias.forEach(d => {
+                if (r.discrepancias.length === 0) {
                     tableData.push([
                         r.carton, 
-                        r.destino, 
                         r.psq, 
+                        r.destino, 
                         r.cajasAuditadas, 
-                        d.tipo, 
-                        d.sku, 
-                        d.cajas, 
-                        d.piezas, 
+                        '', 
+                        '', 
+                        '', 
+                        '', 
                         r.hora
                     ]);
-                });
+                } else {
+                    r.discrepancias.forEach(d => {
+                        tableData.push([
+                            r.carton, 
+                            r.psq, 
+                            r.destino, 
+                            r.cajasAuditadas, 
+                            d.tipo || '', 
+                            d.sku || '', 
+                            d.cajas || 0, 
+                            d.piezas || 0, 
+                            r.hora
+                        ]);
+                    });
+                }
             });
 
             doc.autoTable({
                 head: tableHeaders,
                 body: tableData,
-                startY: 27,
+                startY: 55,
                 theme: 'grid',
                 styles: { fontSize: 8, cellPadding: 2 },
                 headStyles: { fillColor: [45, 50, 119], textColor: [255, 255, 255], fontStyle: 'bold' },
