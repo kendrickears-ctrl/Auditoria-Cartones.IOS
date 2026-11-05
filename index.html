@@ -81,7 +81,7 @@
         <!-- PESTAÑA 1: CAPTURA -->
         <section id="tabCaptura" class="space-y-4">
 
-            <!-- Card 1: Campos de Captura -->
+            <!-- Card 1: Campos de Captura (Reorganizados según requerimiento) -->
             <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 space-y-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -89,9 +89,39 @@
                     </h2>
                 </div>
 
-                <!-- 1. Cartón (con botón de escaneo dedicado para Android) -->
+                <!-- Primera fila: Auditor y Turno -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Auditor</label>
+                        <input type="text" id="auditor" placeholder="Nombre o ID" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Turno</label>
+                        <input type="text" id="turno" placeholder="Ej: Turno 1" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Segunda fila: Supervisor -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Cartón (LPN)</label>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Supervisor</label>
+                    <input type="text" id="supervisor" placeholder="Nombre del supervisor responsable" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                </div>
+
+                <!-- Tercera fila: Destino y Pick Sequence (PSQ) -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Destino</label>
+                        <input type="text" id="destino" placeholder="Ej: 3782" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Pick Sequence (PSQ)</label>
+                        <input type="text" id="psq" placeholder="Ej: PSQ045" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Cuarta fila: Cartón con botón de escaneo -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Cartón</label>
                     <div class="flex gap-2">
                         <input type="text" id="cartonCode" placeholder="Escanea o escribe el cartón" class="flex-1 text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-mono">
                         <button onclick="iniciarEscaneoCarton()" class="bg-meli-blue hover:bg-opacity-90 text-white px-3.5 py-2.5 rounded-lg flex items-center gap-1 font-semibold text-sm active:scale-95 transition-transform">
@@ -100,28 +130,10 @@
                     </div>
                 </div>
 
-                <!-- 2. Destino -->
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Destino</label>
-                    <input type="text" id="destino" placeholder="Ej: 3782" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
-                </div>
-
-                <!-- 3. PSQ -->
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">PSQ</label>
-                    <input type="text" id="psq" placeholder="Ej: PSQ045" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
-                </div>
-
-                <!-- 4. Auditor -->
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Auditor</label>
-                    <input type="text" id="auditor" placeholder="Nombre o ID del auditor" class="w-full text-sm p-2 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none">
-                </div>
-
-                <!-- 5. Cajas auditadas -->
+                <!-- Quinta fila: Cajas auditadas (sin valor predeterminado) -->
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas auditadas</label>
-                    <input type="number" id="cajasAuditadas" min="1" value="1" class="w-full text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-bold text-center">
+                    <input type="number" id="cajasAuditadas" placeholder="Ingrese cantidad" min="0" class="w-full text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-bold text-center">
                 </div>
             </div>
 
@@ -196,7 +208,7 @@
         let codeReader = null;
         let currentStream = null;
         let isScanningActive = false;
-        const STORAGE_KEY = 'auditoria_cartones_android_v3';
+        const STORAGE_KEY = 'auditoria_cartones_android_v4';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -327,18 +339,27 @@
             document.body.classList.remove('modal-active');
         }
 
-        // --- GUARDADO DE REGISTROS ---
+        // --- GUARDADO DE REGISTROS Y LIMPIEZA COMPLETA ---
         function guardarRegistro() {
-            const carton = document.getElementById('cartonCode').value.trim();
+            const auditor = document.getElementById('auditor').value.trim();
+            const turno = document.getElementById('turno').value.trim();
+            const supervisor = document.getElementById('supervisor').value.trim();
             const destino = document.getElementById('destino').value.trim();
             const psq = document.getElementById('psq').value.trim();
-            const auditor = document.getElementById('auditor').value.trim();
-            const cajasAuditadas = parseInt(document.getElementById('cajasAuditadas').value) || 0;
+            const carton = document.getElementById('cartonCode').value.trim();
+            const cajasAuditadasVal = document.getElementById('cajasAuditadas').value.trim();
 
-            if (!carton || !auditor) {
-                alert("Por favor completa los campos obligatorios: Cartón (LPN) y Auditor.");
+            if (!auditor || !carton) {
+                alert("Por favor completa al menos los campos obligatorios: Auditor y Cartón.");
                 return;
             }
+
+            if (cajasAuditadasVal === "") {
+                alert("Por favor ingresa la cantidad de cajas auditadas.");
+                return;
+            }
+
+            const cajasAuditadas = parseInt(cajasAuditadasVal) || 0;
 
             // Recopilar todas las discrepancias agregadas
             const discItems = document.querySelectorAll('.disc-item');
@@ -363,29 +384,48 @@
             const horaStr = ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
             const nuevoRegistro = {
-                carton,
+                auditor,
+                turno: turno || 'N/A',
+                supervisor: supervisor || 'N/A',
                 destino: destino || 'N/A',
                 psq: psq || 'N/A',
+                carton,
                 cajasAuditadas,
-                auditor,
                 fecha: fechaStr,
                 hora: horaStr,
                 discrepancias: discrepanciasList
             };
 
+            // 1. Guardar primero en el arreglo y localStorage de manera exitosa
             registros.unshift(nuevoRegistro);
-            guardarEnLocalStorage();
-            limpiarFormulario();
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+            } catch (e) {
+                alert("Error al guardar en el almacenamiento local.");
+                return;
+            }
+
+            // 2. Únicamente después de confirmar el guardado exitoso, limpiar todos los campos
+            limpiarFormularioCompleto();
+            actualizarBadge();
+
             alert("¡Registro guardado correctamente!");
         }
 
-        function limpiarFormulario() {
+        function limpiarFormularioCompleto() {
+            document.getElementById('auditor').value = '';
+            document.getElementById('turno').value = '';
+            document.getElementById('supervisor').value = '';
+            document.getElementById('destino').value = '';
+            document.getElementById('psq').value = '';
             document.getElementById('cartonCode').value = '';
-            document.getElementById('cajasAuditadas').value = '1';
-            document.getElementById('discrepanciasContainer.innerHTML = ""');
+            document.getElementById('cajasAuditadas').value = '';
+            document.getElementById('headerAuditor').textContent = 'Auditor: N/D';
+
+            // Limpiar discrepancias y dejar una limpia por defecto
             const container = document.getElementById('discrepanciasContainer');
             container.innerHTML = '';
-            agregarDiscrepanciaItem(); // Dejar una discrepancia limpia por defecto
+            agregarDiscrepanciaItem();
         }
 
         function cargarRegistros() {
@@ -393,11 +433,6 @@
                 const data = localStorage.getItem(STORAGE_KEY);
                 if (data) registros = JSON.parse(data);
             } catch (e) { registros = []; }
-            actualizarBadge();
-        }
-
-        function guardarEnLocalStorage() {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch (e) {}
             actualizarBadge();
         }
 
@@ -429,8 +464,10 @@
                     </div>
                     <div class="grid grid-cols-2 text-xs gap-1">
                         <div><span class="text-gray-400">Auditor:</span> <span class="font-semibold">${reg.auditor}</span></div>
+                        <div><span class="text-gray-400">Turno:</span> <span class="font-semibold">${reg.turno}</span></div>
+                        <div><span class="text-gray-400">Supervisor:</span> <span class="font-semibold">${reg.supervisor}</span></div>
                         <div><span class="text-gray-400">Cajas Audit.:</span> <span class="font-bold">${reg.cajasAuditadas}</span></div>
-                        <div><span class="text-gray-400">Fecha/Hora:</span> <span class="text-gray-600">${reg.fecha} ${reg.hora}</span></div>
+                        <div class="col-span-2"><span class="text-gray-400">Fecha/Hora:</span> <span class="text-gray-600">${reg.fecha} ${reg.hora}</span></div>
                     </div>
                     <div class="space-y-1.5 pt-1">
                         <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Discrepancias (${reg.discrepancias.length}):</div>
@@ -454,8 +491,11 @@
         function eliminarRegistro(idx) {
             if (confirm("¿Deseas eliminar este registro completo?")) {
                 registros.splice(idx, 1);
-                guardarEnLocalStorage();
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+                } catch (e) {}
                 renderizarLista();
+                actualizarBadge();
             }
         }
 
@@ -463,12 +503,15 @@
             if (registros.length === 0) return;
             if (confirm("¿Estás seguro de borrar todos los registros?")) {
                 registros = [];
-                guardarEnLocalStorage();
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+                } catch (e) {}
                 renderizarLista();
+                actualizarBadge();
             }
         }
 
-        // --- EXPORTACIÓN CSV (EXACTAMENTE CON LA MISMA ESTRUCTURA Y REPETICIÓN DE FILAS) ---
+        // --- EXPORTACIÓN CSV (ESTRUCTURA MANTENIDA CON REPETICIÓN) ---
         function exportarCSV() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar.");
@@ -508,7 +551,7 @@
             document.body.removeChild(link);
         }
 
-        // --- EXPORTACIÓN PDF (CON ENCABEZADO GLOBAL Y FILAS INDEPENDIENTES REPETIDAS) ---
+        // --- EXPORTACIÓN PDF (ESTRUCTURA CON ENCABEZADO GLOBAL) ---
         function exportarPDF() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar a PDF.");
@@ -517,7 +560,6 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
 
-            // Obtener auditor general (tomado del último registro o N/D) y fecha actual del informe
             const auditorInforme = registros.length > 0 ? registros[0].auditor : 'N/D';
             const fechaInforme = new Date().toLocaleDateString('es-MX');
 
