@@ -130,10 +130,16 @@
                     </div>
                 </div>
 
-                <!-- Quinta fila: Cajas auditadas -->
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas auditadas</label>
-                    <input type="number" id="cajasAuditadas" placeholder="Ingrese cantidad" min="0" class="w-full text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-bold text-center">
+                <!-- Quinta fila: Cajas auditadas y SKUs auditados (uno al lado del otro) -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Cajas auditadas</label>
+                        <input type="number" id="cajasAuditadas" placeholder="Cantidad" min="0" class="w-full text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-bold text-center">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">SKUs auditados</label>
+                        <input type="number" id="skusAuditados" placeholder="Cantidad" min="0" class="w-full text-sm p-2.5 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-meli-accent focus:outline-none font-bold text-center">
+                    </div>
                 </div>
             </div>
 
@@ -172,18 +178,6 @@
                 </button>
             </div>
 
-            <!-- Totales en Pantalla (Cajas contadas y SKUs contados uno al lado del otro) -->
-            <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-200 grid grid-cols-2 gap-2 text-center">
-                <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
-                    <div class="text-[11px] font-bold text-meli-blue uppercase">Cajas contadas</div>
-                    <div id="screenTotalCajas" class="text-base font-extrabold text-meli-blue">0</div>
-                </div>
-                <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
-                    <div class="text-[11px] font-bold text-meli-blue uppercase">SKUs contados</div>
-                    <div id="screenTotalSkus" class="text-base font-extrabold text-meli-blue">0</div>
-                </div>
-            </div>
-
             <div id="listaRegistros" class="space-y-3"></div>
         </section>
 
@@ -219,7 +213,7 @@
         let codeReader = null;
         let currentStream = null;
         let isScanningActive = false;
-        const STORAGE_KEY = 'auditoria_cartones_android_v9';
+        const STORAGE_KEY = 'auditoria_cartones_android_v10';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -248,7 +242,6 @@
                 tabConsultaBtn.className = 'py-3 font-semibold text-center text-sm border-b-2 border-meli-blue text-meli-blue flex justify-center items-center gap-2 transition-all';
                 tabCapturaBtn.className = 'py-3 font-semibold text-center text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex justify-center items-center gap-2 transition-all';
                 renderizarLista();
-                actualizarTotalesPantalla();
             }
         }
 
@@ -361,18 +354,20 @@
             const psq = document.getElementById('psq').value.trim();
             const carton = document.getElementById('cartonCode').value.trim();
             const cajasAuditadasVal = document.getElementById('cajasAuditadas').value.trim();
+            const skusAuditadosVal = document.getElementById('skusAuditados').value.trim();
 
             if (!auditor || !carton) {
                 alert("Por favor completa al menos los campos obligatorios: Auditor y Cartón.");
                 return;
             }
 
-            if (cajasAuditadasVal === "") {
-                alert("Por favor ingresa la cantidad de cajas auditadas.");
+            if (cajasAuditadasVal === "" || skusAuditadosVal === "") {
+                alert("Por favor ingresa tanto las cajas auditadas como los SKUs auditados.");
                 return;
             }
 
             const cajasAuditadas = parseInt(cajasAuditadasVal) || 0;
+            const skusAuditados = parseInt(skusAuditadosVal) || 0;
 
             const discItems = document.querySelectorAll('.disc-item');
             const discrepanciasList = [];
@@ -400,6 +395,7 @@
                 psq: psq || 'N/A',
                 carton,
                 cajasAuditadas,
+                skusAuditados,
                 fecha: fechaStr,
                 hora: horaStr,
                 discrepancias: discrepanciasList
@@ -420,6 +416,7 @@
             document.getElementById('psq').value = '';
             document.getElementById('cartonCode').value = '';
             document.getElementById('cajasAuditadas').value = '';
+            document.getElementById('skusAuditados').value = '';
             document.getElementById('headerAuditor').textContent = 'Auditor: N/D';
 
             const container = document.getElementById('discrepanciasContainer');
@@ -427,7 +424,6 @@
             agregarDiscrepanciaItem();
 
             actualizarBadge();
-            actualizarTotalesPantalla();
             alert("¡Registro guardado correctamente!");
         }
 
@@ -437,34 +433,10 @@
                 if (data) registros = JSON.parse(data);
             } catch (e) { registros = []; }
             actualizarBadge();
-            actualizarTotalesPantalla();
         }
 
         function actualizarBadge() {
             document.getElementById('countBadge').textContent = registros.length;
-        }
-
-        function actualizarTotalesPantalla() {
-            let totalCajas = 0;
-            const cajasPorCarton = {};
-            registros.forEach(r => {
-                if (r.carton) {
-                    cajasPorCarton[r.carton] = r.cajasAuditadas || 0;
-                }
-            });
-            Object.values(cajasPorCarton).forEach(c => { totalCajas += c; });
-
-            const skusUnicos = new Set();
-            registros.forEach(r => {
-                r.discrepancias.forEach(d => {
-                    if (d.sku && d.sku.trim() !== '') {
-                        skusUnicos.add(d.sku.trim());
-                    }
-                });
-            });
-
-            document.getElementById('screenTotalCajas').textContent = totalCajas;
-            document.getElementById('screenTotalSkus').textContent = skusUnicos.size;
         }
 
         function renderizarLista() {
@@ -493,7 +465,7 @@
                         <div><span class="text-gray-400">Auditor:</span> <span class="font-semibold">${reg.auditor}</span></div>
                         <div><span class="text-gray-400">Turno:</span> <span class="font-semibold">${reg.turno}</span></div>
                         <div><span class="text-gray-400">Supervisor:</span> <span class="font-semibold">${reg.supervisor}</span></div>
-                        <div><span class="text-gray-400">Cajas Audit.:</span> <span class="font-bold">${reg.cajasAuditadas}</span></div>
+                        <div><span class="text-gray-400">Cajas/SKUs Audit.:</span> <span class="font-bold">${reg.cajasAuditadas} caj / ${reg.skusAuditados || 0} sku</span></div>
                         <div class="col-span-2"><span class="text-gray-400">Fecha/Hora:</span> <span class="text-gray-600">${reg.fecha} ${reg.hora}</span></div>
                     </div>
                     <div class="space-y-1.5 pt-1">
@@ -522,7 +494,6 @@
                 try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch (e) {}
                 renderizarLista();
                 actualizarBadge();
-                actualizarTotalesPantalla();
             }
         }
 
@@ -533,7 +504,6 @@
                 try { localStorage.setItem(STORAGE_KEY, JSON.stringify(registros)); } catch (e) {}
                 renderizarLista();
                 actualizarBadge();
-                actualizarTotalesPantalla();
             }
         }
 
@@ -577,7 +547,7 @@
             document.body.removeChild(link);
         }
 
-        // --- EXPORTACIÓN PDF (CON TOTALES DE CAJAS/SKUS Y DISTRIBUCIÓN COMPACTA) ---
+        // --- EXPORTACIÓN PDF (CON TOTAL DE CAJAS Y SKUS CONTADOS EN EL RESUMEN) ---
         function exportarPDF() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar a PDF.");
@@ -595,24 +565,18 @@
             const totalCartones = cartonesUnicos.size;
 
             let totalCajasAuditadas = 0;
+            let totalSkusAuditados = 0;
             const cajasPorCarton = {};
+            const skusPorCarton = {};
+            
             registros.forEach(r => {
                 if (r.carton) {
                     cajasPorCarton[r.carton] = r.cajasAuditadas || 0;
+                    skusPorCarton[r.carton] = r.skusAuditados || 0;
                 }
             });
             Object.values(cajasPorCarton).forEach(c => { totalCajasAuditadas += c; });
-
-            // Total de SKUs contados (únicos)
-            const skusUnicos = new Set();
-            registros.forEach(r => {
-                r.discrepancias.forEach(d => {
-                    if (d.sku && d.sku.trim() !== '') {
-                        skusUnicos.add(d.sku.trim());
-                    }
-                });
-            });
-            const totalSkusContados = skusUnicos.size;
+            Object.values(skusPorCarton).forEach(s => { totalSkusAuditados += s; });
 
             let cajasConDiscrepancia = 0;
             let totalSobrantes = 0;
@@ -650,15 +614,15 @@
             doc.setFont('helvetica', 'normal');
             doc.text(`Total de cartones auditados: ${totalCartones}`, 14, 34);
             
-            // Cajas contadas | SKUs contados exactamente uno al lado del otro
-            doc.text(`Cajas contadas: ${totalCajasAuditadas}   |   SKUs contados: ${totalSkusContados}`, 75, 34);
+            // Cajas contadas | SKUs contados exactamente uno al lado del otro en el PDF
+            doc.text(`Cajas contadas: ${totalCajasAuditadas}   |   SKUs contados: ${totalSkusAuditados}`, 75, 34);
             
             doc.text(`Total de cajas con discrepancia: ${cajasConDiscrepancia}`, 160, 34);
             doc.text(`Total de cajas sobrantes: ${totalSobrantes}`, 14, 39);
             doc.text(`Total de cajas faltantes: ${totalFaltantes}`, 75, 39);
             doc.text(`Total de cajas con merma: ${totalMermas}`, 160, 39);
 
-            // --- TABLA DE DESGLOSE (Espacios reducidos y optimizados) ---
+            // --- TABLA DE DESGLOSE ---
             const tableHeaders = [
                 [
                     { content: 'Cartón / LPN', rowSpan: 2 }, 
@@ -711,9 +675,9 @@
             doc.autoTable({
                 head: tableHeaders,
                 body: tableData,
-                startY: 44, // Posición ajustada y compacta
+                startY: 44,
                 theme: 'grid',
-                styles: { fontSize: 7.5, cellPadding: 1.2 }, // Celdas más compactas para aprovechar el espacio vertical
+                styles: { fontSize: 7.5, cellPadding: 1.2 },
                 headStyles: { fillColor: [45, 50, 119], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5, cellPadding: 1.5 },
                 alternateRowStyles: { fillColor: [245, 245, 245] }
             });
