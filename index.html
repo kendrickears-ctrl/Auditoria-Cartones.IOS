@@ -213,7 +213,7 @@
         let codeReader = null;
         let currentStream = null;
         let isScanningActive = false;
-        const STORAGE_KEY = 'auditoria_cartones_android_v10';
+        const STORAGE_KEY = 'auditoria_cartones_android_v11';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -547,7 +547,7 @@
             document.body.removeChild(link);
         }
 
-        // --- EXPORTACIÓN PDF (CON TOTAL DE CAJAS Y SKUS CONTADOS EN EL RESUMEN) ---
+        // --- EXPORTACIÓN PDF (CON PSQ COMPACTO, TOTALES Y DISTRIBUCIÓN) ---
         function exportarPDF() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar a PDF.");
@@ -614,7 +614,7 @@
             doc.setFont('helvetica', 'normal');
             doc.text(`Total de cartones auditados: ${totalCartones}`, 14, 34);
             
-            // Cajas contadas | SKUs contados exactamente uno al lado del otro en el PDF
+            // Cajas contadas | SKUs contados exactamente uno al lado del otro
             doc.text(`Cajas contadas: ${totalCajasAuditadas}   |   SKUs contados: ${totalSkusAuditados}`, 75, 34);
             
             doc.text(`Total de cajas con discrepancia: ${cajasConDiscrepancia}`, 160, 34);
@@ -622,11 +622,11 @@
             doc.text(`Total de cajas faltantes: ${totalFaltantes}`, 75, 39);
             doc.text(`Total de cajas con merma: ${totalMermas}`, 160, 39);
 
-            // --- TABLA DE DESGLOSE ---
+            // --- TABLA DE DESGLOSE (Con la columna PSQ optimizada) ---
             const tableHeaders = [
                 [
                     { content: 'Cartón / LPN', rowSpan: 2 }, 
-                    { content: 'Pick Sequence (PSQ)', rowSpan: 2 }, 
+                    { content: 'PSQ', rowSpan: 2, styles: { halign: 'center' } }, // Cambiado a PSQ con ancho optimizado
                     { content: 'Destino', rowSpan: 2 }, 
                     { content: 'Total de cajas auditadas', rowSpan: 2 }, 
                     { content: 'Discrepancia', rowSpan: 2 },
@@ -678,6 +678,9 @@
                 startY: 44,
                 theme: 'grid',
                 styles: { fontSize: 7.5, cellPadding: 1.2 },
+                columnStyles: {
+                    1: { cellWidth: 22 } // Optimización del ancho de la columna PSQ para que no desperdicie espacio
+                },
                 headStyles: { fillColor: [45, 50, 119], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5, cellPadding: 1.5 },
                 alternateRowStyles: { fillColor: [245, 245, 245] }
             });
