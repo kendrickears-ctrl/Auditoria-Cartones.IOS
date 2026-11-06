@@ -213,7 +213,7 @@
         let codeReader = null;
         let currentStream = null;
         let isScanningActive = false;
-        const STORAGE_KEY = 'auditoria_cartones_android_v11';
+        const STORAGE_KEY = 'auditoria_cartones_android_v12';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -547,14 +547,15 @@
             document.body.removeChild(link);
         }
 
-        // --- EXPORTACIÓN PDF (CON PSQ COMPACTO, TOTALES Y DISTRIBUCIÓN) ---
+        // --- EXPORTACIÓN PDF (ORIENTACIÓN VERTICAL, ANCHO OPTIMIZADO Y COLUMNA LPN EXPANDIDA) ---
         function exportarPDF() {
             if (registros.length === 0) {
                 alert("No hay datos para exportar a PDF.");
                 return;
             }
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
+            // Cambiado a formato vertical ('portrait') para aprovechar mejor el espacio y evitar anchos excesivos
+            const doc = new jsPDF({ orientation: 'portrait', format: 'a4' });
 
             const auditorInforme = registros.length > 0 && registros[0].auditor ? registros[0].auditor : 'N/D';
             const fechaInforme = new Date().toLocaleDateString('es-MX');
@@ -597,7 +598,7 @@
                 });
             });
 
-            // --- DIBUJAR ENCABEZADO Y RESUMEN COMPACTO EN EL PDF ---
+            // --- DIBUJAR ENCABEZADO Y RESUMEN EN EL PDF (VERTICAL) ---
             doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
             doc.text("Reporte de Auditoría de Cartones", 14, 12);
@@ -607,28 +608,23 @@
             doc.text("DATOS GENERALES", 14, 18);
             doc.setFont('helvetica', 'normal');
             doc.text(`Fecha del informe: ${fechaInforme}`, 14, 23);
-            doc.text(`Nombre del auditor: ${auditorInforme}`, 100, 23);
+            doc.text(`Nombre del auditor: ${auditorInforme}`, 110, 23);
 
             doc.setFont('helvetica', 'bold');
             doc.text("RESUMEN DE AUDITORÍA", 14, 29);
             doc.setFont('helvetica', 'normal');
             doc.text(`Total de cartones auditados: ${totalCartones}`, 14, 34);
-            
-            // Cajas contadas | SKUs contados exactamente uno al lado del otro
-            doc.text(`Cajas contadas: ${totalCajasAuditadas}   |   SKUs contados: ${totalSkusAuditados}`, 75, 34);
-            
-            doc.text(`Total de cajas con discrepancia: ${cajasConDiscrepancia}`, 160, 34);
-            doc.text(`Total de cajas sobrantes: ${totalSobrantes}`, 14, 39);
-            doc.text(`Total de cajas faltantes: ${totalFaltantes}`, 75, 39);
-            doc.text(`Total de cajas con merma: ${totalMermas}`, 160, 39);
+            doc.text(`Cajas contadas: ${totalCajasAuditadas}   |   SKUs contados: ${totalSkusAuditados}`, 110, 34);
+            doc.text(`Total de cajas con discrepancia: ${cajasConDiscrepancia}`, 14, 39);
+            doc.text(`Sobrantes: ${totalSobrantes}   |   Faltantes: ${totalFaltantes}   |   Merma: ${totalMermas}`, 110, 39);
 
-            // --- TABLA DE DESGLOSE (Con la columna PSQ optimizada) ---
+            // --- TABLA DE DESGLOSE (Encabezado acortado a "Cajas" y anchos personalizados) ---
             const tableHeaders = [
                 [
                     { content: 'Cartón / LPN', rowSpan: 2 }, 
-                    { content: 'PSQ', rowSpan: 2, styles: { halign: 'center' } }, // Cambiado a PSQ con ancho optimizado
+                    { content: 'PSQ', rowSpan: 2, styles: { halign: 'center' } }, 
                     { content: 'Destino', rowSpan: 2 }, 
-                    { content: 'Total de cajas auditadas', rowSpan: 2 }, 
+                    { content: 'Cajas', rowSpan: 2 }, // Cambiado de "Total de cajas auditadas" a "Cajas" para ajustar el espacio
                     { content: 'Discrepancia', rowSpan: 2 },
                     { content: 'DATOS DISCREPANCIA', colSpan: 3, styles: { halign: 'center', fillColor: [45, 50, 119] } }, 
                     { content: 'Hora', rowSpan: 2 }
@@ -677,11 +673,19 @@
                 body: tableData,
                 startY: 44,
                 theme: 'grid',
-                styles: { fontSize: 7.5, cellPadding: 1.2 },
+                styles: { fontSize: 7, cellPadding: 1.2 },
                 columnStyles: {
-                    1: { cellWidth: 22 } // Optimización del ancho de la columna PSQ para que no desperdicie espacio
+                    0: { cellWidth: 42 }, // Columna LPN/Cartón más ancha para soportar los códigos de hasta 20 dígitos
+                    1: { cellWidth: 15 }, // PSQ compactado
+                    2: { cellWidth: 18 }, // Destino ajustado
+                    3: { cellWidth: 15 }, // Cajas ajustado
+                    4: { cellWidth: 22 }, // Discrepancia
+                    5: { cellWidth: 22 }, // SKU discrepancia
+                    6: { cellWidth: 12 }, // Cajas disc
+                    7: { cellWidth: 12 }, // Piezas disc
+                    8: { cellWidth: 15 }  // Hora
                 },
-                headStyles: { fillColor: [45, 50, 119], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5, cellPadding: 1.5 },
+                headStyles: { fillColor: [45, 50, 119], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7, cellPadding: 1.5 },
                 alternateRowStyles: { fillColor: [245, 245, 245] }
             });
 
